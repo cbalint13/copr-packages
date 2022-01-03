@@ -93,6 +93,7 @@ def gitCheckVersion(pkgname, branch, screpo, dover = False):
       if ("latest" in vers): continue
       if ("nightly" in vers): continue
       if ("gcc" in pkgname): continue
+      if ("gdb" in pkgname): continue
       if ("binutils" in pkgname and "gdb" in vers): continue
       if ("gdb" in pkgname and "binutils" in vers): continue
       if (pkgname == "yosys" in vers): vers.replace('yosys-','')
