@@ -1,0 +1,20 @@
+name: COPR Cron Updates
+
+on:
+
+  schedule:
+
+    - cron: '0 0 * * *'
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - uses: actions/checkout@v2
+
+      - name: Run COPR updates in docker image
+        run: docker build . --build-arg copr_login=${{secrets.COPR_LOGIN}} --build-arg copr_token=${{secrets.COPR_TOKEN}} --file Dockerfile -t copr-builds
