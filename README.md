@@ -42,7 +42,7 @@ Release:        %{scdate0}.%{pkgvers}.git%{sshort0}%{?dist}
 ### **Security:**
 * **Root of trust** is the very [RedHat/Fedora COPR](https://copr.fedorainfracloud.org) service.
 * **Transparency** of builds are **guaranteed** by detailed **end-to-end logs** for all build processes.
-* There are **no static tarballs** but only links to SCM sources, all sources being **fetched from upstream** at the build time.
+* There are **no static tarballs** but links to SCM sources that are **fetched from upstream** at build time.
 * Built packages on COPR service are **cryptographically signed** thus **certifies their origin** from COPR cloud.
 
 ### **Principles:**
