@@ -138,9 +138,9 @@ def buildNewSRPM(pkgname, newvers, newdate, newhash):
     for i in range(0, len(newhash)):
       os.system("sed -i '/^\%%global pkgvers/s/.*/\%%global pkgvers 0/' /tmp/srpm-%s/*.spec" % pkgname)
       os.system("sed -i '/^\%%global scdate%i/s/.*/\%%global scdate%i %s/' /tmp/srpm-%s/*.spec" % (i, i, newdate[i][0:8], pkgname))
-      os.system("sed -i '/^\%%global schash%i/s/.*/\%%global schash%i %s/' /tmp/srpm-%s/*.spec" % (i, i, newhash[i][0:8], pkgname))
+      os.system("sed -i '/^\%%global schash%i/s/.*/\%%global schash%i %s/' /tmp/srpm-%s/*.spec" % (i, i, newhash[i], pkgname))
 
-    cmd = "rpmbuild -bs /tmp/srpm-%s/*.spec | grep Wrote" % pkgname
+    cmd = "rpmbuild --undefine dist -bs /tmp/srpm-%s/*.spec | grep Wrote" % pkgname
     proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
     srpm = proc.stdout.read().decode('utf-8').split()[1]
     os.system("rm -rf /tmp/srpm-%s" % pkgname)
