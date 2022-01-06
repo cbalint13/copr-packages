@@ -2,7 +2,8 @@
 ## Copr Package Automation
 
 This repo is intended to automate release engineering within [RedHat/Fedora COPR](https://copr.fedorainfracloud.org) build services.
-At this moment this automated action drives the following COPR projects:
+
+At current time the [automated actions](https://github.com/cbalint13/copr-packages/actions) drives the following COPR projects:
    * [Machine Learning packages](https://copr.fedorainfracloud.org/coprs/rezso/ML)
    * [Hardware Description Language Tools packages](https://copr.fedorainfracloud.org/coprs/rezso/HDL)
    * [OpenSource VLSI Tools related packages](https://copr.fedorainfracloud.org/coprs/rezso/VLSI)
@@ -33,7 +34,8 @@ At this moment this automated action drives the following COPR projects:
 %global branch0 master
 %global source0 https://github.com/berkeley-abc/abc.git
 ...
-Release:        %{scdate0}.%{pkgvers}.git%{sshort0}%{?dist}```
+Version:        1.02
+Release:        %{scdate0}.%{pkgvers}.git%{sshort0}%{?dist}
 ...
 ```
 
