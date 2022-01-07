@@ -217,7 +217,7 @@ for pkg in pkglist:
   diffhours = divmod(difftime, 3600)[0]
 
   if ( diffdays < 7 ):
-    print("    SKIP only [%sd %sm] [%s] " % (diffdays, diffhours, pkgname))
+    print("    SKIP only [%sd %sh] [%s] " % (diffdays, diffhours, pkgname))
     continue
 
   # fetch latest .spec file form COPR cloud
