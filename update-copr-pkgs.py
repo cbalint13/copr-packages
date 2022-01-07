@@ -130,9 +130,6 @@ def gitCheckVersion(pkgname, branch, screpo, dover = False):
         # next
         continue
 
-      print("DBG [%s]" % commitvers)
-
-
     os.system("rm -rf /tmp/%s" % pkgname)
 
     if commitvers:
