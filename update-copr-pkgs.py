@@ -185,6 +185,7 @@ def buildCOPR(srpm, chroots):
 # fetch project packages
 pkglist = client.package_proxy.get_list(client.config['username'], coprproject, None, with_latest_build=True)
 
+cuda_build = False
 idx = len(pkglist)
 for pkg in pkglist:
 
@@ -202,10 +203,6 @@ for pkg in pkglist:
   # skip non scm
   if (not "git" in version):
     print("    PINNED [%s] [%s] is skipped" % (pkgname,version))
-    continue
-  # skip running
-  if (state == "running"):
-    print("    RUNNING build [%s] already in queue" % version)
     continue
   # skip unfinished
   if (state != "succeeded"):
@@ -236,6 +233,15 @@ for pkg in pkglist:
     continue
 
   pkgrel = re.findall('Version: (.+)', spec)[0].split()[0]
+
+  # check cuda requirements
+  cudaver_maj = re.findall('%global vcu_maj (.+)', spec)
+  cudaver_min = re.findall('%global vcu_min (.+)', spec)
+
+  if (cuda_build):
+    # already queued one
+    print("    SKIP [%s] [%s] another CUDA build already queued" % (pkgname, version))
+    continue
 
   screpo = []
   scdate = []
@@ -290,3 +296,6 @@ for pkg in pkglist:
     # submit build
     print("    SUBMIT [%s]" % srpm)
     buildCOPR(srpm, pkg['builds']['latest']['chroots'])
+
+    # mark one cuda build
+    if (cudaver_maj or cudaver_min): cuda_build = True
