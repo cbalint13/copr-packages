@@ -2,7 +2,7 @@ FROM centos:centos8
 
 RUN dnf install -y git rpmdevtools rpm-build epel-release
 
-RUN dnf install -y copr-cli python3-copr
+RUN dnf install -y copr-cli copr-distgit-client python3-copr
 
 COPY update-copr-pkgs.py /update-copr-pkgs.py
 

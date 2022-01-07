@@ -36,6 +36,26 @@ if len(sys.argv) < 2:
 coprproject = sys.argv[1]
 client = Client.create_from_config_file()
 
+def tagExtract(v, d = '-'):
+
+  while (True):
+    if not v: return None
+    # keep only literal parts
+    for t in v.split('%s' % d):
+      # skip empty
+      if not t: continue
+      # skip non literal
+      if not re.findall('[0-9]', t):
+        v = v.replace(t,''); break
+      # literal segment tag
+      m = re.findall('[a-z,A-Z]', t)
+      if len(m):
+        # lookup sub-segment
+        v = t; d = m[0]; break
+      else: return t
+
+  return t
+
 def httpRequest(method, host, uri, body=None):
 
     c = httplib.HTTPSConnection(host)
@@ -88,27 +108,30 @@ def gitCheckVersion(pkgname, branch, screpo, dover = False):
     for idx, vers in enumerate(results):
 
       # blacklists
-      if ("-a" in vers): continue
-      if ("rc" in vers): continue
-      if ("dev" in vers): continue
-      if ("latest" in vers): continue
-      if ("nightly" in vers): continue
       if ("gcc" in pkgname): continue
-      if ("gdb" in pkgname): continue
-      if ("binutils" in pkgname and "gdb" in vers): continue
       if ("gdb" in pkgname and "binutils" in vers): continue
-      if (pkgname == "yosys" in vers): vers.replace('yosys-','')
-      if (pkgname == "nextpnr" in vers): vers.replace('nextpnr-','')
+      if ("binutils" in pkgname and "gdb" in vers): continue
+      if ("newlib" in pkgname and "snapshot" in vers): continue
+      if ("newlib" in pkgname and "newlib" not in vers): continue
 
       # delimit
       vers = re.sub('[+,_]', '.', vers, 0)
-      # literals
-      vers = re.sub('[a-z,A-Z]', '', vers, 0)
-      # remove last dot
-      if (vers[-1] == '.'): vers = vers[0:-1]
 
-      commitvers = vers
-      break
+      # extract tag part
+      commitvers = tagExtract(vers)
+
+      if (commitvers):
+        # remove any last dot
+        if (commitvers[-1] == '.'):
+          commitvers = commitvers[:-1]
+        # stop
+        break
+      else:
+        # next
+        continue
+
+      print("DBG [%s]" % commitvers)
+
 
     os.system("rm -rf /tmp/%s" % pkgname)
 
@@ -141,7 +164,9 @@ def buildNewSRPM(pkgname, newvers, newdate, newhash):
       os.system("sed -i '/^\%%global scdate%i/s/.*/\%%global scdate%i %s/' /tmp/srpm-%s/*.spec" % (i, i, newdate[i][0:8], pkgname))
       os.system("sed -i '/^\%%global schash%i/s/.*/\%%global schash%i %s/' /tmp/srpm-%s/*.spec" % (i, i, newhash[i], pkgname))
 
-    cmd = "rpmbuild --undefine dist -bs /tmp/srpm-%s/*.spec | grep Wrote" % pkgname
+    os.system("pushd /tmp/srpm-%s/ >/dev/null; copr-distgit-client sources >/dev/null 2>&1; popd >/dev/null" % pkgname)
+
+    cmd = "rpmbuild --define '_sourcedir /tmp/srpm-%s' --undefine dist -bs /tmp/srpm-%s/*.spec | grep Wrote" % (pkgname, pkgname)
     proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
     srpm = proc.stdout.read().decode('utf-8').split()[1]
     os.system("rm -rf /tmp/srpm-%s" % pkgname)
@@ -163,7 +188,7 @@ pkglist = client.package_proxy.get_list(client.config['username'], coprproject, 
 idx = len(pkglist)
 for pkg in pkglist:
 
-#  if( pkg['name'] != "opencv"):
+#  if( pkg['name'] != "tensorflow"):
 #    continue
 
   pkgname = pkg['name']
