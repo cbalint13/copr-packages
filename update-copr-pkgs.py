@@ -88,6 +88,7 @@ def gitCheckVersion(pkgname, branch, screpo, dover = False):
     for idx, vers in enumerate(results):
 
       # blacklists
+      if ("-a" in vers): continue
       if ("rc" in vers): continue
       if ("dev" in vers): continue
       if ("latest" in vers): continue
@@ -102,7 +103,7 @@ def gitCheckVersion(pkgname, branch, screpo, dover = False):
       # delimit
       vers = re.sub('[+,_]', '.', vers, 0)
       # literals
-      vers = re.sub('[a-z,A-Z,-]', '', vers, 0)
+      vers = re.sub('[a-z,A-Z]', '', vers, 0)
       # remove last dot
       if (vers[-1] == '.'): vers = vers[0:-1]
 
