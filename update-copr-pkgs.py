@@ -238,6 +238,13 @@ for pkg in pkglist:
     print("    UNMANAGED n-v-r [%s] [%s] is skipped" % (pkgname, version))
     continue
 
+  # skip locked spec
+  lockver = re.findall('%global lockver (.+)', spec)
+
+  if (lockver):
+    print("    LOCKED n-v-r [%s] [%s] is skipped" % (pkgname, version))
+    continue
+
   pkgrel = re.findall('Version: (.+)', spec)[0].split()[0]
 
   # check cuda requirements
