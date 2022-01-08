@@ -161,8 +161,17 @@ def buildNewSRPM(pkgname, newvers, newdate, newhash):
       os.system("sed -i '/^\%%global scdate%i/s/.*/\%%global scdate%i %s/' /tmp/srpm-%s/*.spec" % (i, i, newdate[i][0:8], pkgname))
       os.system("sed -i '/^\%%global schash%i/s/.*/\%%global schash%i %s/' /tmp/srpm-%s/*.spec" % (i, i, newhash[i], pkgname))
 
-    os.system("pushd /tmp/srpm-%s/ >/dev/null; copr-distgit-client sources >/dev/null 2>&1; popd >/dev/null" % pkgname)
+    # look for any tarball payload
+    cmd = "cat /tmp/srpm-%s/sources" % pkgname
+    proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+    # fetch tarballs (if any) from cloud
+    for line in proc.stdout.readlines():
+      srchash = line.decode('utf-8').split()[0]
+      srcname = line.decode('utf-8').split()[1]
+      os.system("curl https://copr-dist-git.fedorainfracloud.org/repo/pkgs/%s/%s/%s/%s/md5/%s/%s -o /tmp/srpm-%s/%s >/dev/null 2>&1" \
+          % (client.config['username'], coprproject, pkgname, srcname, srchash, srcname, pkgname, srcname))
 
+    # build final srpm
     cmd = "rpmbuild --define '_sourcedir /tmp/srpm-%s' --undefine dist -bs /tmp/srpm-%s/*.spec | grep Wrote" % (pkgname, pkgname)
     proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
     srpm = proc.stdout.read().decode('utf-8').split()[1]
