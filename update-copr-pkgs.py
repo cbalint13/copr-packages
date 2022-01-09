@@ -205,8 +205,8 @@ for pkg in pkglist:
     continue
 
   difftime = int(time.time()) - int(pkg['builds']['latest']['submitted_on'])
-  diffdays = divmod(difftime, 86400)[0]
-  diffhours = divmod(difftime, 3600)[0]
+  diffdays, diffhours = divmod(difftime, 86400)
+  diffhours = divmod(diffhours, 3600)[0]
 
   if ( diffdays < 7 ):
     print("    SKIP only [%sd %sh] [%s] " % (diffdays, diffhours, pkgname))
