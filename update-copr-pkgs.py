@@ -196,7 +196,7 @@ for pkg in pkglist:
   version = pkg['builds']['latest']['source_package']['version']
 
   # skip non scm
-  if (not "git" in version):
+  if (not ".git" in version):
     print("    PINNED [%s] [%s] is skipped" % (pkgname,version))
     continue
   # skip unfinished
