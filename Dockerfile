@@ -15,8 +15,8 @@ RUN mkdir /root/.config; \
     echo "token = ${copr_token}" >> /root/.config/copr; \
     echo "copr_url = https://copr.fedorainfracloud.org" >> /root/.config/copr;
 
-RUN python3 -u update-copr-pkgs.py HDL
+RUN python3 -u update-copr-pkgs.py HDL --min-days 7
 
-RUN python3 -u update-copr-pkgs.py VLSI
+RUN python3 -u update-copr-pkgs.py VLSI --min-days 7
 
-RUN python3 -u update-copr-pkgs.py ML
+RUN python3 -u update-copr-pkgs.py ML --min-days 7 --cuda-builds 1

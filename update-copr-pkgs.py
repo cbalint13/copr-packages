@@ -28,12 +28,36 @@ from copr.v3 import Client
 from http import client as httplib
 
 
-if len(sys.argv) < 2:
-  print("Usage %s <projectname>" % sys.argv[0])
+def helpmsg():
+  print("Usage %s <projectname>\n \
+          [--min-days    NUM] (default: 7)  Minumum amount of interval in days\n \
+          [--cuda-builds NUM] (default: 1)  Maximum amount of cuda builds per session\n"
+         % sys.argv[0])
   exit(-1)
 
-# copr-cli object
+if len(sys.argv) < 2:
+  helpmsg()
+
+# default
+mindays = 7
+cudabuilds = 1
 coprproject = sys.argv[1]
+
+# parse extra args
+for idx in range(2, len(sys.argv)):
+  if (sys.argv[idx][0:2] == "--"):
+
+    if (sys.argv[idx] == "--min-days"):
+      mindays = int(sys.argv[idx + 1])
+      continue
+
+    if (sys.argv[idx] == "--cuda-builds"):
+      cudabuilds = int(sys.argv[idx + 1])
+      continue
+
+    print("Unknown arg: %s" % sys.argv[idx])
+    helpmsg()
+
 client = Client.create_from_config_file()
 
 def tagExtract(v, d = '-'):
@@ -112,7 +136,6 @@ def gitCheckVersion(pkgname, branch, screpo, dover = False):
       if ("gcc" in pkgname): continue
       if ("gdb" in pkgname and "binutils" in vers): continue
       if ("binutils" in pkgname and "gdb" in vers): continue
-      if ("newlib" in pkgname and "snapshot" in vers): continue
       if ("newlib" in pkgname and "newlib" not in vers): continue
 
       # delimit
@@ -180,7 +203,7 @@ def buildCOPR(srpm, chroots):
 # fetch project packages
 pkglist = client.package_proxy.get_list(client.config['username'], coprproject, None, with_latest_build=True)
 
-cuda_build = False
+cuda_build = 0
 idx = len(pkglist)
 for pkg in pkglist:
 
@@ -208,8 +231,8 @@ for pkg in pkglist:
   diffdays, diffhours = divmod(difftime, 86400)
   diffhours = divmod(diffhours, 3600)[0]
 
-  if ( diffdays < 7 ):
-    print("    SKIP only [%sd %sh] [%s] " % (diffdays, diffhours, pkgname))
+  if ( diffdays < mindays ):
+    print("    SKIP [%s] only [%sd %sh] /%sd" % (pkgname, diffdays, diffhours, mindays))
     continue
 
   # fetch latest .spec file form COPR cloud
@@ -240,9 +263,9 @@ for pkg in pkglist:
   cudaver_maj = re.findall('%global vcu_maj (.+)', spec)
   cudaver_min = re.findall('%global vcu_min (.+)', spec)
 
-  if (cuda_build):
+  if (cuda_build >= cudabuilds):
     # already queued one
-    print("    SKIP [%s] [%s] another CUDA build already queued" % (pkgname, version))
+    print("    SKIP [%s] [%s] reached %s CUDA build limit" % (pkgname, version, cudabuilds))
     continue
 
   screpo = []
@@ -300,4 +323,4 @@ for pkg in pkglist:
     buildCOPR(srpm, pkg['builds']['latest']['chroots'])
 
     # mark one cuda build
-    if (cudaver_maj or cudaver_min): cuda_build = True
+    if (cudaver_maj or cudaver_min): cuda_build += 1
