@@ -81,7 +81,7 @@ def httpRequest(method, host, uri, body=None):
 def gitCheckVersion(pkgname, branch, screpo, dover = False):
 
     os.system("rm -rf /tmp/%s" % pkgname)
-    os.system("git clone -q -n --depth 1 -b %s %s /tmp/%s" % (branch, screpo, pkgname))
+    os.system("git clone -q -n --filter=blob:none --depth 1 -b %s %s /tmp/%s" % (branch, screpo, pkgname))
     cmd = "git -C /tmp/%s log -1 --format=fuller --date=format:'%%Y%%m%%d%%H%%M' \
                | grep CommitDate | awk '{print $2}'" % pkgname
     proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
@@ -94,18 +94,19 @@ def gitCheckVersion(pkgname, branch, screpo, dover = False):
     commitvers = None
 
     if (not dover):
+      os.system("rm -rf /tmp/%s" % pkgname)
       return (commitvers, commitdate[0])
 
     # extract release tag info
-    os.system("git -C /tmp/%s fetch -q -n --depth 1 --tags" % pkgname)
-    cmd = "git -C /tmp/%s describe --tags $(git -C /tmp/%s rev-list --tags) 2>/dev/null" % (pkgname, pkgname)
+    os.system("git -C /tmp/%s fetch -q -n --filter=blob:none --depth 1 --tags" % pkgname)
+    cmd = "git -C /tmp/%s tag --sort=creatordate 2>/dev/null" % pkgname
     proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
     try:
       results = proc.stdout.read().decode('utf-8').split()
     except:
       results = None
 
-    for idx, vers in enumerate(results):
+    for idx, vers in enumerate(reversed(results)):
 
       # blacklists
       if ("gcc" in pkgname): continue
@@ -131,18 +132,6 @@ def gitCheckVersion(pkgname, branch, screpo, dover = False):
         continue
 
     os.system("rm -rf /tmp/%s" % pkgname)
-
-    if commitvers:
-      return (commitvers, commitdate[0])
-
-    # alternative way (no date information)
-    cmd = "git ls-remote --refs --tags %s | grep -v latest | awk -F/ '{print$NF}' \
-               | sed 's|[A-Z,a-z,-]||g' | sed 's|_|.|g' | grep '\.' | sort -V | tail -n 1" % screpo
-    proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
-    try:
-      commitvers = proc.stdout.read().decode('utf-8').split()[0]
-    except:
-      commitvers = None
 
     return (commitvers, commitdate[0])
 
@@ -225,7 +214,7 @@ for pkg in pkglist:
 
   # fetch latest .spec file form COPR cloud
   spec = httpRequest("GET", "copr-dist-git.fedorainfracloud.org",
-                     "/cgit/%s/%s/%s.git/plain/%s.spec?h=master"
+                     "/cgit/%s/%s/%s.git/plain/%s.spec"
           % (client.config['username'], coprproject, pkgname, pkgname))
   if (not spec):
     print("    ERROR getting %s.spec" % pkgname)
