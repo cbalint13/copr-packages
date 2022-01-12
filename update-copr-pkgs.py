@@ -263,10 +263,6 @@ for pkg in pkglist:
   cudaver_maj = re.findall('%global vcu_maj (.+)', spec)
   cudaver_min = re.findall('%global vcu_min (.+)', spec)
 
-  if (cuda_build >= cudabuilds):
-    # already queued one
-    print("    SKIP [%s] [%s] reached %s CUDA build limit" % (pkgname, version, cudabuilds))
-    continue
 
   screpo = []
   scdate = []
@@ -299,6 +295,12 @@ for pkg in pkglist:
     continue
 
   else:
+
+    if (cuda_build >= cudabuilds):
+      # already queued one
+      print("    SKIP [%s] [%s] reached %s CUDA build limit" % (pkgname, version, cudabuilds))
+      continue
+
     # new changes upstream
     for i in range(0, len(screpo)):
 
