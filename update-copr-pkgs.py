@@ -134,6 +134,7 @@ def gitCheckVersion(pkgname, branch, screpo, dover = False):
 
       # blacklists
       if ("gcc" in pkgname): continue
+      if ("gklib" in pkgname): continue
       if ("gdb" in pkgname and "binutils" in vers): continue
       if ("binutils" in pkgname and "gdb" in vers): continue
       if ("newlib" in pkgname and "newlib" not in vers): continue
