@@ -297,7 +297,8 @@ for pkg in pkglist:
 
   else:
 
-    if (cuda_build >= cudabuilds):
+    if ((cudaver_maj or cudaver_min)
+      and (cuda_build >= cudabuilds)):
       # already queued one
       print("    SKIP [%s] [%s] reached %s CUDA build limit" % (pkgname, version, cudabuilds))
       continue
