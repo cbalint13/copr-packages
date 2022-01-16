@@ -31,7 +31,9 @@ from http import client as httplib
 def helpmsg():
   print("Usage %s <projectname>\n \
           [--min-days    NUM] (default: 7)  Minumum amount of interval in days\n \
-          [--cuda-builds NUM] (default: 1)  Maximum amount of cuda builds per session\n"
+          [--cuda-builds NUM] (default: 1)  Maximum amount of cuda builds per session\n \
+          [--cuda-ver-maj NUM] (default: 11)  CUDA version major\n \
+          [--cuda-ver-min NUM] (default: 6)  CUDA version minor\n"
          % sys.argv[0])
   exit(-1)
 
@@ -41,6 +43,8 @@ if len(sys.argv) < 2:
 # default
 mindays = 7
 cudabuilds = 1
+cu_ver_maj = None
+cu_ver_min = None
 coprproject = sys.argv[1]
 
 # parse extra args
@@ -53,6 +57,14 @@ for idx in range(2, len(sys.argv)):
 
     if (sys.argv[idx] == "--cuda-builds"):
       cudabuilds = int(sys.argv[idx + 1])
+      continue
+
+    if (sys.argv[idx] == "--cuda-ver-maj"):
+      cu_ver_maj = int(sys.argv[idx + 1])
+      continue
+
+    if (sys.argv[idx] == "--cuda-ver-min"):
+      cu_ver_min = int(sys.argv[idx + 1])
       continue
 
     print("Unknown arg: %s" % sys.argv[idx])
@@ -173,6 +185,12 @@ def buildNewSRPM(pkgname, newvers, newdate, newhash):
       os.system("sed -i '/^\%%global pkgvers/s/.*/\%%global pkgvers 0/' /tmp/srpm-%s/*.spec" % pkgname)
       os.system("sed -i '/^\%%global scdate%i/s/.*/\%%global scdate%i %s/' /tmp/srpm-%s/*.spec" % (i, i, newdate[i][0:8], pkgname))
       os.system("sed -i '/^\%%global schash%i/s/.*/\%%global schash%i %s/' /tmp/srpm-%s/*.spec" % (i, i, newhash[i], pkgname))
+
+    if (cu_ver_maj):
+      os.system("sed -i '/^\%%global vcu_maj/s/.*/\%%global vcu_maj %s/' /tmp/srpm-%s/*.spec" % (cu_ver_maj, pkgname))
+
+    if (cu_ver_min):
+      os.system("sed -i '/^\%%global vcu_min/s/.*/\%%global vcu_min %s/' /tmp/srpm-%s/*.spec" % (cu_ver_min, pkgname))
 
     # look for any tarball payload
     cmd = "cat /tmp/srpm-%s/sources" % pkgname

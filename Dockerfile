@@ -19,4 +19,4 @@ RUN python3 -u update-copr-pkgs.py HDL --min-days 7
 
 RUN python3 -u update-copr-pkgs.py VLSI --min-days 7
 
-RUN python3 -u update-copr-pkgs.py ML --min-days 7 --cuda-builds 1
+RUN python3 -u update-copr-pkgs.py ML --min-days 7 --cuda-ver-maj 11 --cuda-ver-min 6 --cuda-builds 1
