@@ -304,7 +304,7 @@ for pkg in pkglist:
       break
 
     # get upstream latest hash
-    cmd = 'git ls-remote %s %s' % (screpo[i], branch[i])
+    cmd = 'git ls-remote --ref --head %s %s' % (screpo[i], branch[i])
     proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
     newhash.append(proc.stdout.read().decode('utf-8').split()[0])
 
