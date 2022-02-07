@@ -152,6 +152,7 @@ def gitCheckVersion(pkgname, branch, screpo, dover = False):
       if ("onednn" in pkgname and "graph" in vers): continue
       if ("gdb" in pkgname and "binutils" in vers): continue
       if ("binutils" in pkgname and "gdb" in vers): continue
+      if ("newlib" in pkgname and "snapshot" in vers): continue
       if ("newlib" in pkgname and "newlib" not in vers): continue
 
       # delimit
