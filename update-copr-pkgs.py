@@ -29,7 +29,7 @@ from http import client as httplib
 
 
 def helpmsg():
-  print("Usage %s <projectname>\n \
+  print("Usage %s <projectname> [package]\n \
           [--min-days    NUM] (default: 7)  Minumum amount of interval in days\n \
           [--cuda-builds NUM] (default: 1)  Maximum amount of cuda builds per session\n \
           [--cuda-ver-maj NUM] (default: 11)  CUDA version major\n \
@@ -45,10 +45,11 @@ mindays = 7
 cudabuilds = 1
 cu_ver_maj = None
 cu_ver_min = None
-coprproject = sys.argv[1]
+coprproject = None
+coprpackage = None
 
 # parse extra args
-for idx in range(2, len(sys.argv)):
+for idx in range(1, len(sys.argv)):
   if (sys.argv[idx][0:2] == "--"):
 
     if (sys.argv[idx] == "--min-days"):
@@ -65,6 +66,19 @@ for idx in range(2, len(sys.argv)):
 
     if (sys.argv[idx] == "--cuda-ver-min"):
       cu_ver_min = int(sys.argv[idx + 1])
+      continue
+
+    print("Unknown arg: %s" % sys.argv[idx])
+    helpmsg()
+
+  else:
+
+    if (not coprproject):
+      coprproject = sys.argv[idx]
+      continue
+
+    if (coprproject and not coprpackage):
+      coprpackage = sys.argv[idx]
       continue
 
     print("Unknown arg: %s" % sys.argv[idx])
@@ -233,8 +247,8 @@ cuda_build = 0
 idx = len(pkglist)
 for pkg in pkglist:
 
-#  if( pkg['name'] != "tensorflow"):
-#    continue
+  if(coprpackage and (pkg['name'] != coprpackage)):
+    continue
 
   pkgname = pkg['name']
   print("%s/%s Checking [%s]" % (idx, len(pkglist), pkgname))
