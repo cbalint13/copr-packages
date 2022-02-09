@@ -225,6 +225,9 @@ def buildCOPR(srpm, chroots):
 
 # fetch project packages
 pkglist = client.package_proxy.get_list(client.config['username'], coprproject, None, with_latest_build=True)
+# fetch project enabled chroots
+prjconf = client.project_proxy.get(client.config['username'], coprproject)
+chroots = list(prjconf['chroot_repos'].keys() )
 
 cuda_build = 0
 idx = len(pkglist)
@@ -344,9 +347,16 @@ for pkg in pkglist:
     # build srpm
     srpm = buildNewSRPM(pkgname, newvers, newdate, newhash)
 
+    builders = []
+    for chroot in pkg['builds']['latest']['chroots']:
+      if chroot in chroots:
+        builders.append(chroot)
+      else:
+        print("    SKIP inactive [%s] builder" % chroot)
+
     # submit build
     print("    SUBMIT [%s]" % srpm)
-    buildCOPR(srpm, pkg['builds']['latest']['chroots'])
+    buildCOPR(srpm, builders)
 
     # mark one cuda build
     if (cudaver_maj or cudaver_min): cuda_build += 1
