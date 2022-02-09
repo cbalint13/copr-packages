@@ -73,16 +73,18 @@ for idx in range(1, len(sys.argv)):
 
   else:
 
-    if (not coprproject):
-      coprproject = sys.argv[idx]
-      continue
+    if (idx < 3):
 
-    if (coprproject and not coprpackage):
-      coprpackage = sys.argv[idx]
-      continue
+      if (not coprproject):
+        coprproject = sys.argv[idx]
+        continue
 
-    print("Unknown arg: %s" % sys.argv[idx])
-    helpmsg()
+      if (coprproject and not coprpackage):
+        coprpackage = sys.argv[idx]
+        continue
+
+      print("Unknown arg: %s" % sys.argv[idx])
+      helpmsg()
 
 client = Client.create_from_config_file()
 
