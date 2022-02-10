@@ -33,7 +33,8 @@ def helpmsg():
           [--min-days    NUM] (default: 7)  Minumum amount of interval in days\n \
           [--cuda-builds NUM] (default: 1)  Maximum amount of cuda builds per session\n \
           [--cuda-ver-maj NUM] (default: 11)  CUDA version major\n \
-          [--cuda-ver-min NUM] (default: 6)  CUDA version minor\n"
+          [--cuda-ver-min NUM] (default: 6)  CUDA version minor\n \
+          [--fork <chroot-from-prefix> <chroot-into-prefix>] (example: --fork fedora-rawhide fedora-36)\n" \
          % sys.argv[0])
   exit(-1)
 
@@ -47,6 +48,8 @@ cu_ver_maj = None
 cu_ver_min = None
 coprproject = None
 coprpackage = None
+fork_from = None
+fork_into = None
 
 # parse extra args
 for idx in range(1, len(sys.argv)):
@@ -66,6 +69,11 @@ for idx in range(1, len(sys.argv)):
 
     if (sys.argv[idx] == "--cuda-ver-min"):
       cu_ver_min = int(sys.argv[idx + 1])
+      continue
+
+    if (sys.argv[idx] == "--fork"):
+      fork_from = str(sys.argv[idx + 1])
+      fork_into = str(sys.argv[idx + 2])
       continue
 
     print("Unknown arg: %s" % sys.argv[idx])
@@ -367,6 +375,10 @@ for pkg in pkglist:
     for chroot in pkg['builds']['latest']['chroots']:
       if chroot in chroots:
         builders.append(chroot)
+        if (fork_into and (fork_from in chroot)):
+          if not any(fork_into in s for s in pkg['builds']['latest']['chroots']):
+            builders.append(chroot.replace(fork_from, fork_into))
+            print("    APPEND active [%s] builder" % builders[-1])
       else:
         print("    SKIP inactive [%s] builder" % chroot)
 
