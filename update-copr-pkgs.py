@@ -344,6 +344,7 @@ for pkg in pkglist:
       stdout, stderr = proc.communicate(timeout=30)
       exit_code = proc.wait()
     except:
+      proc.kill()
       exit_code = -1
       break
 
