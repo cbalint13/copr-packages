@@ -323,6 +323,9 @@ for pkg in pkglist:
   newdate = []
   newhash = []
 
+  stdout = None
+  exit_code = 0
+
   for i in range(10):
 
     try:
@@ -337,7 +340,19 @@ for pkg in pkglist:
     # get upstream latest hash
     cmd = 'git ls-remote --ref --head %s %s' % (screpo[i], branch[i])
     proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
-    newhash.append(proc.stdout.read().decode('utf-8').split()[0])
+    try:
+      stdout, stderr = proc.communicate(timeout=30)
+      exit_code = proc.wait()
+    except:
+      exit_code = -1
+      break
+
+    if (exit_code == 0):
+      newhash.append(stdout.decode('utf-8').split()[0])
+
+  if (exit_code != 0):
+    print("    ERROR [%i] fetching [%s] repository" % (exit_code, screpo[0]))
+    continue
 
   if (schash[0] == newhash[0]):
     # already updated
