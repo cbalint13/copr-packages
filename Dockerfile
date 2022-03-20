@@ -21,4 +21,4 @@ RUN python3 -u update-copr-pkgs.py VLSI --min-days 7 --fork fedora-rawhide fedor
 
 RUN python3 -u update-copr-pkgs.py SDR --min-days 7 --fork fedora-rawhide fedora-36
 
-RUN python3 -u update-copr-pkgs.py ML --min-days 7 --cuda-ver-maj 11 --cuda-ver-min 6 --cuda-builds 1 --fork fedora-rawhide fedora-36
+RUN python3 -u update-copr-pkgs.py ML --min-days 7 --cuda-ver-maj 11 --cuda-ver-min 6 --fork fedora-rawhide fedora-36
