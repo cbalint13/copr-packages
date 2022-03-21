@@ -30,6 +30,7 @@ from http import client as httplib
 
 def helpmsg():
   print("Usage %s <projectname> [package]\n \
+          [--force] Immediate build\n \
           [--min-days    NUM] (default: 7)  Minumum amount of interval in days\n \
           [--cuda-builds NUM] (default: 1)  Maximum amount of cuda builds per session\n \
           [--cuda-ver-maj NUM] (default: 11)  CUDA version major\n \
@@ -43,6 +44,7 @@ if len(sys.argv) < 2:
 
 # default
 mindays = 7
+force = False
 cudabuilds = 1
 cu_ver_maj = None
 cu_ver_min = None
@@ -54,6 +56,10 @@ fork_into = None
 # parse extra args
 for idx in range(1, len(sys.argv)):
   if (sys.argv[idx][0:2] == "--"):
+
+    if (sys.argv[idx] == "--force"):
+      force = True
+      continue
 
     if (sys.argv[idx] == "--min-days"):
       mindays = int(sys.argv[idx + 1])
@@ -356,14 +362,14 @@ for pkg in pkglist:
     print("    ERROR [%i] fetching [%s] repository" % (exit_code, screpo[0]))
     continue
 
-  if (schash[0] == newhash[0]):
+  if not force and (schash[0] == newhash[0]):
     # already updated
     print("    SKIP [%s] @ [%s] already latest" % (scdate[0], schash[0]))
     continue
 
   else:
 
-    if ((cudaver_maj or cudaver_min)
+    if not force and ((cudaver_maj or cudaver_min)
       and (cuda_build >= cudabuilds)):
       # already queued one
       print("    SKIP [%s] [%s] reached %s CUDA build limit" % (pkgname, version, cudabuilds))
