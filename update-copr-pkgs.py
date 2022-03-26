@@ -181,6 +181,7 @@ def gitCheckVersion(pkgname, branch, screpo, dover = False):
       if ("bladerf" in pkgname and "_" in vers): continue
       if ("limesuite" in pkgname and "-" in vers): continue
       if ("onednn" in pkgname and "graph" in vers): continue
+      if ("pytorch" in pkgname and "ciflow" in vers): continue
       if ("gdb" in pkgname and "binutils" in vers): continue
       if ("binutils" in pkgname and "gdb" in vers): continue
       if ("newlib" in pkgname and "snapshot" in vers): continue
