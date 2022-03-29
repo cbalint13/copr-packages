@@ -45,7 +45,7 @@ if len(sys.argv) < 2:
 # default
 mindays = 7
 force = False
-cudabuilds = 1
+cudabuilds = -1
 cu_ver_maj = None
 cu_ver_min = None
 coprproject = None
@@ -371,7 +371,7 @@ for pkg in pkglist:
   else:
 
     if not force and ((cudaver_maj or cudaver_min)
-      and (cuda_build >= cudabuilds)):
+      and (cudabuilds != -1) and (cuda_build >= cudabuilds)):
       # already queued one
       print("    SKIP [%s] [%s] reached %s CUDA build limit" % (pkgname, version, cudabuilds))
       continue
