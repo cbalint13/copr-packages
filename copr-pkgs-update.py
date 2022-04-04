@@ -289,7 +289,7 @@ for pkg in pkglist:
   diffdays, diffhours = divmod(difftime, 86400)
   diffhours = divmod(diffhours, 3600)[0]
 
-  if ( diffdays < mindays ):
+  if ( diffdays < mindays ) and not force:
     print("    SKIP [%s] only [%sd %sh] /%sd" % (pkgname, diffdays, diffhours, mindays))
     continue
 
