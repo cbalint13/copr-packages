@@ -164,7 +164,7 @@ def gitCheckVersion(pkgname, branch, screpo, dover = False):
       return (commitvers, commitdate[0])
 
     # extract release tag info
-    os.system("git -C /tmp/%s fetch -q -n --filter=blob:none --depth 1 --tags" % pkgname)
+    os.system("git -C /tmp/%s fetch -q -n --filter=blob:none --depth 1 --tags 2>/dev/null" % pkgname)
     cmd = "git -C /tmp/%s tag --sort=creatordate 2>/dev/null" % pkgname
     proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
     try:
@@ -181,6 +181,7 @@ def gitCheckVersion(pkgname, branch, screpo, dover = False):
       if ("bladerf" in pkgname and "_" in vers): continue
       if ("limesuite" in pkgname and "-" in vers): continue
       if ("onednn" in pkgname and "graph" in vers): continue
+      if ("gnuradio" in pkgname and int(vers.split('.')[1]) < 11): continue
       if ("pytorch" in pkgname and "." not in vers): continue
       if ("gdb" in pkgname and "binutils" in vers): continue
       if ("binutils" in pkgname and "gdb" in vers): continue
