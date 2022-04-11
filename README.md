@@ -4,11 +4,11 @@
 This repo is intended to automate release engineering within [RedHat/Fedora COPR](https://copr.fedorainfracloud.org) build services.
 
 At current time the [automated actions](https://github.com/cbalint13/copr-packages/actions) drives the following COPR projects:
-   * [Machine Learning related packages](https://copr.fedorainfracloud.org/coprs/rezso/ML)
-   * [Hardware Description Language Tools packages](https://copr.fedorainfracloud.org/coprs/rezso/HDL)
-   * [OpenSource VLSI Tools related packages](https://copr.fedorainfracloud.org/coprs/rezso/VLSI)
-   * [Software Defined Radio related packages](https://copr.fedorainfracloud.org/coprs/rezso/SDR)
-   * [Mobile Communication related packages](https://copr.fedorainfracloud.org/coprs/rezso/MOBILE)
+   * [Machine Learning](https://copr.fedorainfracloud.org/coprs/rezso/ML) related packages.
+   * [Hardware Description Language Tools](https://copr.fedorainfracloud.org/coprs/rezso/HDL) related packages.
+   * [Open source VLSI Tools](https://copr.fedorainfracloud.org/coprs/rezso/VLSI) related packages.
+   * [Software Defined Radio](https://copr.fedorainfracloud.org/coprs/rezso/SDR) related packages.
+   * [Mobile Communication](https://copr.fedorainfracloud.org/coprs/rezso/MOBILE) related packages.
 
 ----
 
