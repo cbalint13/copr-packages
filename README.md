@@ -8,6 +8,7 @@ At current time the [automated actions](https://github.com/cbalint13/copr-packag
    * [Hardware Description Language Tools packages](https://copr.fedorainfracloud.org/coprs/rezso/HDL)
    * [OpenSource VLSI Tools related packages](https://copr.fedorainfracloud.org/coprs/rezso/VLSI)
    * [Software Defined Radio related packages](https://copr.fedorainfracloud.org/coprs/rezso/SDR)
+   * [Mobile Communication related packages](https://copr.fedorainfracloud.org/coprs/rezso/MOBILE)
 
 ----
 
