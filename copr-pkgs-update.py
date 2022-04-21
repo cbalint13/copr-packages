@@ -144,6 +144,37 @@ def httpRequest(method, host, uri, body=None):
 
     return bytes
 
+def gitCoprSpec(user, coprproject, pkgname, proto = "git"):
+
+    spec = None
+
+    if (proto == "git"):
+
+      os.system("rm -rf /tmp/%s.copr" % pkgname)
+      os.system("git clone -q https://copr-dist-git.fedorainfracloud.org/git/%s/%s/%s.git \
+                        /tmp/%s.copr" % (user, coprproject, pkgname, pkgname))
+
+      try:
+        with open("/tmp/%s.copr/%s.spec" % (pkgname, pkgname)) as f:
+          spec = f.read()
+        os.system("rm -rf /tmp/%s.copr" % pkgname)
+        return spec
+
+      except:
+        return None
+
+    if (proto == "http"):
+
+      spec = httpRequest("GET", "copr-dist-git.fedorainfracloud.org",
+                         "/cgit/%s/%s/%s.git/plain/%s.spec"
+           % (client.config['username'], coprproject, pkgname, pkgname))
+
+      return spec
+
+    print("Unknown protocol [%s]" % proto)
+    exit(-1)
+
+
 def gitCheckVersion(pkgname, branch, screpo, dover = False):
 
     os.system("rm -rf /tmp/%s" % pkgname)
@@ -282,6 +313,7 @@ for pkg in pkglist:
   if (not ".git" in version):
     print("    PINNED [%s] [%s] is skipped" % (pkgname,version))
     continue
+
   # skip unfinished
   if (state != "succeeded"):
     print("    %s build [%s] holds the queue" % (state.upper(), version))
@@ -296,9 +328,7 @@ for pkg in pkglist:
     continue
 
   # fetch latest .spec file form COPR cloud
-  spec = httpRequest("GET", "copr-dist-git.fedorainfracloud.org",
-                     "/cgit/%s/%s/%s.git/plain/%s.spec"
-          % (client.config['username'], coprproject, pkgname, pkgname))
+  spec = gitCoprSpec(client.config['username'], coprproject, pkgname)
   if (not spec):
     print("    ERROR getting %s.spec" % pkgname)
     continue
