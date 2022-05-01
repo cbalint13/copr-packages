@@ -30,7 +30,8 @@ from http import client as httplib
 
 def helpmsg():
   print("Usage %s <projectname> [package]\n \
-          [--force] Immediate build\n \
+          [--force] Immediate force build\n \
+          [--rebuild] Immediate rebuild (+nvr increment)\n \
           [--min-days    NUM] (default: 7)  Minumum amount of interval in days\n \
           [--cuda-builds NUM] (default: 1)  Maximum amount of cuda builds per session\n \
           [--cuda-ver-maj NUM] (default: 11)  CUDA version major\n \
@@ -45,6 +46,7 @@ if len(sys.argv) < 2:
 # default
 mindays = 7
 force = False
+rebld = False
 cudabuilds = -1
 cu_ver_maj = None
 cu_ver_min = None
@@ -59,6 +61,10 @@ for idx in range(1, len(sys.argv)):
 
     if (sys.argv[idx] == "--force"):
       force = True
+      continue
+
+    if (sys.argv[idx] == "--rebuild"):
+      rebld = True
       continue
 
     if (sys.argv[idx] == "--min-days"):
@@ -240,7 +246,7 @@ def gitCheckVersion(pkgname, branch, screpo, dover = False):
 
     return (commitvers, commitdate[0])
 
-def buildNewSRPM(pkgname, newvers, newdate, newhash):
+def buildNewSRPM(pkgname, newvers, newdate, newhash, pkgver):
 
     os.system("rm -rf /tmp/srpm-%s /tmp/srpm.tar" % pkgname)
     coprscm = "https://copr-dist-git.fedorainfracloud.org/git/%s/%s/%s.git /tmp/srpm-%s" \
@@ -251,7 +257,7 @@ def buildNewSRPM(pkgname, newvers, newdate, newhash):
       os.system("sed -i '/^Version:/s/.*/Version:        %s/' /tmp/srpm-%s/*.spec" % (newvers[0], pkgname))
 
     for i in range(0, len(newhash)):
-      os.system("sed -i '/^\%%global pkgvers/s/.*/\%%global pkgvers 0/' /tmp/srpm-%s/*.spec" % pkgname)
+      os.system("sed -i '/^\%%global pkgvers/s/.*/\%%global pkgvers %i/' /tmp/srpm-%s/*.spec" % (pkgver, pkgname))
       os.system("sed -i '/^\%%global scdate%i/s/.*/\%%global scdate%i %s/' /tmp/srpm-%s/*.spec" % (i, i, newdate[i][0:8], pkgname))
       os.system("sed -i '/^\%%global schash%i/s/.*/\%%global schash%i %s/' /tmp/srpm-%s/*.spec" % (i, i, newhash[i], pkgname))
 
@@ -323,7 +329,7 @@ for pkg in pkglist:
   diffdays, diffhours = divmod(difftime, 86400)
   diffhours = divmod(diffhours, 3600)[0]
 
-  if ( diffdays < mindays ) and not force:
+  if ( diffdays < mindays ) and not (force or rebld):
     print("    SKIP [%s] only [%sd %sh] /%sd" % (pkgname, diffdays, diffhours, mindays))
     continue
 
@@ -348,6 +354,7 @@ for pkg in pkglist:
     continue
 
   pkgrel = re.findall('Version: (.+)', spec)[0].split()[0]
+  pkgver = int(re.findall('%global pkgvers (.+)', spec)[0])
 
   # check cuda requirements
   cudaver_maj = re.findall('%global vcu_maj (.+)', spec)
@@ -395,14 +402,20 @@ for pkg in pkglist:
     print("    ERROR [%i] fetching [%s] repository" % (exit_code, screpo[0]))
     continue
 
-  if not force and (schash[0] == newhash[0]):
+  if not (force or rebld) and (schash[0] == newhash[0]):
     # already updated
     print("    SKIP [%s] @ [%s] already latest" % (scdate[0], schash[0]))
     continue
 
   else:
 
-    if not force and ((cudaver_maj or cudaver_min)
+    # increment revision
+    if (rebld) and (schash[0] == newhash[0]):
+      pkgver = pkgver + 1
+    else:
+      pkgver = 0
+
+    if not (force or rebld) and ((cudaver_maj or cudaver_min)
       and (cudabuilds != -1) and (cuda_build >= cudabuilds)):
       # already queued one
       print("    SKIP [%s] [%s] reached %s CUDA build limit" % (pkgname, version, cudabuilds))
@@ -425,7 +438,7 @@ for pkg in pkglist:
       print("    UPDATE schash%i:[%s] -> [%s] @ [%s]" % (i, newhash[i][0:8], pkgname, schash[i][0:8]))
 
     # build srpm
-    srpm = buildNewSRPM(pkgname, newvers, newdate, newhash)
+    srpm = buildNewSRPM(pkgname, newvers, newdate, newhash, pkgver)
 
     builders = []
     for chroot in pkg['builds']['latest']['chroots']:
