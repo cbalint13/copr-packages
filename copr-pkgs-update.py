@@ -236,6 +236,9 @@ def gitCheckVersion(pkgname, branch, screpo, dover = False):
         # remove any last dot
         if (commitvers[-1] == '.'):
           commitvers = commitvers[:-1]
+        # remove any first dot
+        if (commitvers[0] == '.'):
+          commitvers = commitvers[1:]
         # stop
         break
       else:
