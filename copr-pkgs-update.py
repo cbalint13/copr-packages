@@ -215,6 +215,7 @@ def gitCheckVersion(pkgname, branch, screpo, dover = False):
       if ("gcc" in pkgname): continue
       if ("gklib" in pkgname): continue
       if ("nextpnr" in pkgname): continue
+      if ("tensorflow" in pkgname): continue
       if ("bladerf" in pkgname and "_" in vers): continue
       if ("limesuite" in pkgname and "-" in vers): continue
       if ("onednn" in pkgname and "graph" in vers): continue
