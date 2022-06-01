@@ -23,4 +23,4 @@ RUN python3 -u copr-pkgs-update.py SDR --min-days 7
 
 RUN python3 -u copr-pkgs-update.py MOBILE --min-days 7
 
-RUN python3 -u copr-pkgs-update.py ML --min-days 7 --cuda-ver-maj 11 --cuda-ver-min 6
+RUN python3 -u copr-pkgs-update.py ML --min-days 7 --cuda-ver-maj 11 --cuda-ver-min 7
