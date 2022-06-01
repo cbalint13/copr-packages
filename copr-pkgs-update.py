@@ -108,6 +108,10 @@ for idx in range(1, len(sys.argv)):
 
 client = Client.create_from_config_file()
 
+def verMap(v):
+
+    return tuple(map(int, (v.split("."))))
+
 def tagExtract(v, d = '-'):
 
   while (True):
@@ -437,7 +441,12 @@ for pkg in pkglist:
 
       if (i == 0):
         print("    NEW [%s] -> [%s] @ [%s]" % (newdate[i][0:8], scdate[i], schash[i]))
-        print("    UPDATE version:[%s] -> [%s] @ [%s]" % (newvers[i], pkgname, pkgrel))
+        if verMap(newvers[i]) < verMap(pkgrel):
+          print("    ERROR: version decreasing: [%s] -> [%s]" % (newvers[i], pkgrel))
+          exit(-1)
+        else:
+          print("    UPDATE version:[%s] -> [%s] @ [%s]" % (newvers[i], pkgname, pkgrel))
+
 
       print("    UPDATE scdate%i:[%s] -> [%s] @ [%s]" % (i, newdate[i][0:8], pkgname, scdate[i]))
       print("    UPDATE schash%i:[%s] -> [%s] @ [%s]" % (i, newhash[i][0:8], pkgname, schash[i][0:8]))
