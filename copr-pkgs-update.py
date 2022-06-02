@@ -231,6 +231,7 @@ def gitCheckVersion(pkgname, branch, screpo, dover = False):
       if ("newlib" in pkgname and "newlib" not in vers): continue
       if ("libxsmm" in pkgname and re.findall('[a-z;A-Z]', vers)): continue
       if ("mxnet" in pkgname and int(vers.split('.')[0]) < 2): continue
+      if ("xbyak" in pkgname and len(vers) > 5): vers = vers[:5]
 
       # delimit
       vers = re.sub('[+,_]', '.', vers, 0)
