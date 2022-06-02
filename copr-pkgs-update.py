@@ -442,9 +442,10 @@ for pkg in pkglist:
 
       if (i == 0):
         print("    NEW [%s] -> [%s] @ [%s]" % (newdate[i][0:8], scdate[i], schash[i]))
-        if verMap(newvers[i]) < verMap(pkgrel):
-          print("    ERROR: version decreasing: [%s] -> [%s]" % (newvers[i], pkgrel))
-          exit(-1)
+        if newvers[i]:
+          if verMap(newvers[i]) < verMap(pkgrel):
+            print("    ERROR: version decreasing: [%s] -> [%s]" % (newvers[i], pkgrel))
+            exit(-1)
         else:
           print("    UPDATE version:[%s] -> [%s] @ [%s]" % (newvers[i], pkgname, pkgrel))
 
