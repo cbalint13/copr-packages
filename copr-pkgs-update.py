@@ -185,7 +185,7 @@ def gitCoprSpec(user, coprproject, pkgname, proto = "git"):
     exit(-1)
 
 
-def gitCheckVersion(pkgname, branch, screpo, dover = False):
+def gitCheckVersion(pkgname, branch, screpo, schash, dover = False, itershallow = True):
 
     os.system("rm -rf /tmp/%s" % pkgname)
     os.system("git clone -q -n --filter=blob:none --depth 1 -b %s %s /tmp/%s" % (branch, screpo, pkgname))
@@ -198,6 +198,7 @@ def gitCheckVersion(pkgname, branch, screpo, dover = False):
         print("    GIT error fetching commitdate [%s]" % screpo)
         exit(-1)
 
+    results = None
     commitvers = None
 
     if (not dover):
@@ -206,12 +207,32 @@ def gitCheckVersion(pkgname, branch, screpo, dover = False):
 
     # extract release tag info
     os.system("git -C /tmp/%s fetch -q -n --filter=blob:none --depth 1 --tags 2>/dev/null" % pkgname)
-    cmd = "git -C /tmp/%s tag --sort=creatordate 2>/dev/null" % pkgname
-    proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
-    try:
-      results = proc.stdout.read().decode('utf-8').split()
-    except:
-      results = None
+
+    cmd = "git -C /tmp/%s describe --tags %s 2>/dev/null" % (pkgname, schash)
+
+    if itershallow:
+      maxcount = 16
+      while ( True ):
+        if not maxcount: break
+        # iterate through shallow fetches
+        proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+        proc.wait()
+        if proc.returncode:
+          maxcount -= 1
+          os.system("git -C /tmp/%s fetch -q -n --filter=blob:none --deepen 100 2>/dev/null" % pkgname)
+        else:
+          results = proc.stdout.read().decode('utf-8').split()
+          break
+
+    # fallback
+    if (not results) or (not itershallow):
+      # just return a table of tags
+      cmd = "git -C /tmp/%s tag --sort=creatordate 2>/dev/null" % pkgname
+      proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+      try:
+        results = proc.stdout.read().decode('utf-8').split()
+      except:
+        results = None
 
     for idx, vers in enumerate(reversed(results)):
 
@@ -238,7 +259,6 @@ def gitCheckVersion(pkgname, branch, screpo, dover = False):
 
       # delimit
       vers = re.sub('[+,_]', '.', vers, 0)
-
 
       # extract tag part
       commitvers = tagExtract(vers)
@@ -439,7 +459,7 @@ for pkg in pkglist:
     for i in range(0, len(screpo)):
 
       # lookup v-r
-      nvers, ndate = gitCheckVersion(pkgname, branch[i], screpo[i], i == 0)
+      nvers, ndate = gitCheckVersion(pkgname, branch[i], screpo[i], newhash[i], i == 0)
 
       newvers.append(nvers)
       newdate.append(ndate)
@@ -450,8 +470,8 @@ for pkg in pkglist:
           if verMap(newvers[i]) < verMap(pkgrel):
             print("    ERROR: version decreasing: [%s] -> [%s]" % (newvers[i], pkgrel))
             exit(-1)
-        else:
-          print("    UPDATE version:[%s] -> [%s] @ [%s]" % (newvers[i], pkgname, pkgrel))
+          elif (verMap(newvers[i]) > verMap(pkgrel)):
+            print("    UPDATE version:[%s] -> [%s] @ [%s]" % (newvers[i], pkgname, pkgrel))
 
 
       print("    UPDATE scdate%i:[%s] -> [%s] @ [%s]" % (i, newdate[i][0:8], pkgname, scdate[i]))
