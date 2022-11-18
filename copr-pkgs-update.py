@@ -205,10 +205,11 @@ def gitCheckVersion(pkgname, branch, screpo, schash, dover = False, itershallow 
       os.system("rm -rf /tmp/%s" % pkgname)
       return (commitvers, commitdate[0])
 
-    # extract release tag info
+    # fetch last blob only
     os.system("git -C /tmp/%s fetch -q -n --filter=blob:none --depth 1 --tags 2>/dev/null" % pkgname)
 
-    cmd = "git -C /tmp/%s describe --tags %s 2>/dev/null" % (pkgname, schash)
+    # extract release tag info
+    cmd = "git -C /tmp/%s describe %s 2>/dev/null" % (pkgname, schash)
 
     if itershallow:
       maxcount = 16
