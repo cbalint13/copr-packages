@@ -109,11 +109,22 @@ for idx in range(1, len(sys.argv)):
 client = Client.create_from_config_file()
 
 def verMap(v):
-
+    if not v: return tuple()
     return tuple(map(int, (v.split("."))))
 
 def tagExtract(v, d = '-'):
 
+  def tagNormal(t):
+    if (t):
+      # remove any last dot
+      if (t[-1] == '.'): t = t[:-1]
+      # remove any first dot
+      if (t[ 0] == '.'): t = t[1: ]
+    return t
+
+  # delimit
+  v = re.sub('[+,_]', '.', v, 0)
+  # iterate
   while (True):
     if not v: return None
     # keep only literal parts
@@ -128,9 +139,9 @@ def tagExtract(v, d = '-'):
       if len(m):
         # lookup sub-segment
         v = t; d = m[0]; break
-      else: return t
+      else: return tagNormal(t)
 
-  return t
+  return tagNormal(t)
 
 def httpRequest(method, host, uri, body=None):
 
@@ -185,7 +196,7 @@ def gitCoprSpec(user, coprproject, pkgname, proto = "git"):
     exit(-1)
 
 
-def gitCheckVersion(pkgname, branch, screpo, schash, dover = False, itershallow = True):
+def gitCheckVersion(pkgname, branch, screpo, schash, dover = False):
 
     os.system("rm -rf /tmp/%s" % pkgname)
     os.system("git clone -q -n --filter=blob:none --depth 1 -b %s %s /tmp/%s" % (branch, screpo, pkgname))
@@ -199,11 +210,12 @@ def gitCheckVersion(pkgname, branch, screpo, schash, dover = False, itershallow 
         exit(-1)
 
     results = None
-    commitvers = None
+    logvers = None
+    tagvers = None
 
     if (not dover):
       os.system("rm -rf /tmp/%s" % pkgname)
-      return (commitvers, commitdate[0])
+      return (logvers, tagvers, commitdate[0])
 
     # fetch last blob only
     os.system("git -C /tmp/%s fetch -q -n --filter=blob:none --depth 1 --tags 2>/dev/null" % pkgname)
@@ -211,46 +223,39 @@ def gitCheckVersion(pkgname, branch, screpo, schash, dover = False, itershallow 
     # extract release tag info
     cmd = "git -C /tmp/%s describe --tags --exact-match --candidates=1000000 %s 2>/dev/null" % (pkgname, schash)
 
-    if itershallow:
-      maxcount = 16
-      while ( True ):
-        if not maxcount: break
-        # iterate through shallow fetches
-        proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
-        proc.wait()
-        if proc.returncode:
-          maxcount -= 1
-          os.system("git -C /tmp/%s fetch -q -n --filter=blob:none --deepen 100 2>/dev/null" % pkgname)
-        else:
-          results = proc.stdout.read().decode('utf-8').split()
-          break
-
-    # fallback
-    if (not results) or (not itershallow):
-      # just return a table of tags
-      cmd = "git -C /tmp/%s tag --sort=creatordate 2>/dev/null" % pkgname
+    maxcount = 16
+    while ( True ):
+      if not maxcount: break
+      # GITLOG: iterate through shallow fetches
       proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
-      try:
-        results = proc.stdout.read().decode('utf-8').split()
-      except:
-        results = None
+      proc.wait()
+      if proc.returncode:
+        maxcount -= 1
+        os.system("git -C /tmp/%s fetch -q -n --filter=blob:none --deepen 100 2>/dev/null" % pkgname)
+      else:
+        entry = proc.stdout.read().decode('utf-8').split()
+        # extract tag part
+        logvers = tagExtract(entry[0])
+        break
+
+    # GITTAG: just return a table of tags
+    cmd = "git -C /tmp/%s tag --sort=creatordate 2>/dev/null" % pkgname
+    proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+    try:
+      results = proc.stdout.read().decode('utf-8').split()
+    except:
+      results = None
 
     for idx, vers in enumerate(reversed(results)):
 
       # blacklists
-      if ("gcc" in pkgname): continue
       if ("gklib" in pkgname): continue
       if ("nextpnr" in pkgname): continue
-      if ("pytorch" in pkgname): continue
-      if ("tensorflow" in pkgname): continue
-      if ("tensorboard" in pkgname): continue
       if ("bladerf" in pkgname and "_" in vers): continue
       if ("limesuite" in pkgname and "-" in vers): continue
       if ("onednn" in pkgname and "graph" in vers): continue
       if ("gnuradio" in pkgname and int(vers.split('.')[1]) < 11): continue
       if ("torch" in pkgname and "." not in vers): continue
-      if ("gdb" in pkgname and "binutils" in vers): continue
-      if ("binutils" in pkgname and "gdb" in vers): continue
       if ("newlib" in pkgname and "snapshot" in vers): continue
       if ("newlib" in pkgname and "newlib" not in vers): continue
       if ("libxsmm" in pkgname and re.findall('[a-z;A-Z]', vers)): continue
@@ -258,28 +263,27 @@ def gitCheckVersion(pkgname, branch, screpo, schash, dover = False, itershallow 
       if ("optuna" in pkgname and int(re.sub('[a-z,A-Z]','',vers.split('.')[0],0)) < 3): continue
       if ("xbyak" in pkgname and len(vers) > 5): vers = vers[:5]
 
-      # delimit
-      vers = re.sub('[+,_]', '.', vers, 0)
-
       # extract tag part
-      commitvers = tagExtract(vers)
-
-      if (commitvers):
-        # remove any last dot
-        if (commitvers[-1] == '.'):
-          commitvers = commitvers[:-1]
-        # remove any first dot
-        if (commitvers[0] == '.'):
-          commitvers = commitvers[1:]
-        # stop
-        break
-      else:
-        # next
-        continue
+      tagvers = tagExtract(vers)
+      if (tagvers): break
 
     os.system("rm -rf /tmp/%s" % pkgname)
 
-    return (commitvers, commitdate[0])
+    return (logvers, tagvers, commitdate[0])
+
+def unpackSPEC(spec):
+
+    f = open('/tmp/unpack.spec', 'w')
+    f.write(spec)
+    f.close()
+
+    cmd = "rpmspec -P /tmp/unpack.spec"
+    proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+    unspec = proc.stdout.read().decode('utf-8')
+    os.system("rm -rf /tmp/unpack.spec")
+
+    return unspec
+
 
 def buildNewSRPM(pkgname, newvers, newdate, newhash, pkgver):
 
@@ -388,13 +392,16 @@ for pkg in pkglist:
     print("    LOCKED n-v-r [%s] [%s] is skipped" % (pkgname, version))
     continue
 
+  # check versions
   pkgrel = re.findall('Version: (.+)', spec)[0].split()[0]
   pkgver = int(re.findall('%global pkgvers (.+)', spec)[0])
+
+  # self versioned package
+  if "(" in pkgrel: pkgrel = None
 
   # check cuda requirements
   cudaver_maj = re.findall('%global vcu_maj (.+)', spec)
   cudaver_min = re.findall('%global vcu_min (.+)', spec)
-
 
   screpo = []
   scdate = []
@@ -459,21 +466,47 @@ for pkg in pkglist:
     # new changes upstream
     for i in range(0, len(screpo)):
 
-      # lookup v-r
-      nvers, ndate = gitCheckVersion(pkgname, branch[i], screpo[i], newhash[i], i == 0)
+      if not pkgrel:
+        selfvers = re.findall('Version: (.+)', unpackSPEC(spec))[0].split()[0]
+        print("    SELF versioned:[%s]" % selfvers)
 
-      newvers.append(nvers)
+      # lookup v-r
+      logvers, tagvers, ndate = gitCheckVersion(pkgname, branch[i], screpo[i], newhash[i], (i == 0) and pkgrel)
+
+      newvers.append(None)
       newdate.append(ndate)
 
-      if (i == 0):
-        print("    NEW [%s] -> [%s] @ [%s]" % (newdate[i][0:8], scdate[i], schash[i]))
-        if newvers[i]:
-          if verMap(newvers[i]) < verMap(pkgrel):
-            print("    ERROR: version decreasing: [%s] -> [%s]" % (newvers[i], pkgrel))
-            exit(-1)
-          elif (verMap(newvers[i]) > verMap(pkgrel)):
-            print("    UPDATE version:[%s] -> [%s] @ [%s]" % (newvers[i], pkgname, pkgrel))
+      if (i == 0) and pkgrel:
 
+        print("    NEW [%s] -> [%s] @ [%s]" % (newdate[i][0:8], scdate[i], schash[i]))
+
+        error = 0
+        if logvers and (verMap(logvers) > verMap(pkgrel)):
+          # use logvers (default)
+          newvers[i] = logvers
+          print("    UPDATE version:[%s] -> [%s] @ [%s] (git logs)" % (newvers[i], pkgname, pkgrel))
+
+        elif tagvers and (verMap(tagvers) > verMap(pkgrel)):
+          # use tagvers (fallback)
+          newvers[i] = tagvers
+          print("    UPDATE version:[%s] -> [%s] @ [%s] (git tags)" % (newvers[i], pkgname, pkgrel))
+
+        # pass if no changes
+        elif logvers == pkgrel: pass
+        elif tagvers == pkgrel: pass
+        # pass on inexistent
+        elif (not logvers) and (not tagvers): pass
+
+        else:
+          # fail on decreasing changes
+          if logvers and (verMap(logvers) < verMap(pkgrel)):
+            print("    ERROR: version decreasing: [%s] -> [%s] (git log)" % (logvers, pkgrel))
+            error = 1
+          if tagvers and (verMap(tagvers) < verMap(pkgrel)):
+            print("    ERROR: version decreasing: [%s] -> [%s] (git tag)" % (tagvers, pkgrel))
+            error = 2
+
+        if (error): exit(1)
 
       print("    UPDATE scdate%i:[%s] -> [%s] @ [%s]" % (i, newdate[i][0:8], pkgname, scdate[i]))
       print("    UPDATE schash%i:[%s] -> [%s] @ [%s]" % (i, newhash[i][0:8], pkgname, schash[i][0:8]))
