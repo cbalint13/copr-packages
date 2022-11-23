@@ -256,8 +256,6 @@ def gitCheckVersion(pkgname, branch, screpo, schash, dover = False):
       if ("onednn" in pkgname and "graph" in vers): continue
       if ("gnuradio" in pkgname and int(vers.split('.')[1]) < 11): continue
       if ("torch" in pkgname and "." not in vers): continue
-      if ("newlib" in pkgname and "snapshot" in vers): continue
-      if ("newlib" in pkgname and "newlib" not in vers): continue
       if ("libxsmm" in pkgname and re.findall('[a-z;A-Z]', vers)): continue
       if ("mxnet" in pkgname and int(vers.split('.')[0]) < 2): continue
       if ("optuna" in pkgname and int(re.sub('[a-z,A-Z]','',vers.split('.')[0],0)) < 3): continue
