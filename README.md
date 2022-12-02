@@ -15,17 +15,20 @@ At current time the [automated actions](https://github.com/cbalint13/copr-packag
 ### **Action Workflow:**
 * Uses a **scheduled GITHUB service** within a simple Docker container.
 * Remote copr **repo packages are parsed** against upstream scm sources (github, bitbucket, svn, etc).
-* In case of **any newer upstream** changes a **new build** is initiated having updated **n-v-r, hashes, tags**.
+* In case of **new upstream** changes a **new build** is initiated having updated **n-v-r, hashes, tags**.
+* Incremental **release policy** of a package can be: *tag based* (latest stable) or *hash based* (latest edge).
 
 ### **N-V-R:**
+
+* **HASH** based, *latest edge* stepping:
 
 ```
 1.02-20211229.0.git48498af8
  |      |     |    |
  |      |     |    |__ hash of SCM (short version)
- |      |     |_______ pkgvers minor (in case patches)
- |      |_____________ date of SCM release / checkout
- |____________________ upstream version / tag
+ |      |     |_______ package number (minor version)
+ |      |_____________ date of SCM commit
+ |____________________ upstream version
 ```
 
 ```
@@ -37,7 +40,28 @@ At current time the [automated actions](https://github.com/cbalint13/copr-packag
 %global source0 https://github.com/berkeley-abc/abc.git
 ...
 Version:        1.02
-Release:        %{scdate0}.%{pkgvers}.git%{sshort0}%{?dist}
+Release:        %{scdate0}.%{pkgvers}.git%{sshort0}
+...
+```
+
+* **TAG** based, *latest stable* stepping:
+
+```
+2.10.0-20220915.0
+ |        |     |
+ |        |     |_______ package number (minor version)
+ |        |_____________ date of TAG release
+ |______________________ upstream version
+```
+```
+[cutlass.spec]
+%global pkgvers 0
+%global scdate0 20220915
+%global sctags0 v2.10.0
+%global source0 https://github.com/NVIDIA/cutlass.git
+...
+Version:        2.10.0
+Release:        %{scdate0}.%{pkgvers}.cu%{vcu_maj}_%{vcu_min}%{?dist}
 ...
 ```
 

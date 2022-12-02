@@ -283,7 +283,7 @@ def unpackSPEC(spec):
     return unspec
 
 
-def buildNewSRPM(pkgname, newvers, newdate, newhash, pkgver):
+def buildNewSRPM(pkgname, newvers, newdate, newhash, newtags, pkgver):
 
     os.system("rm -rf /tmp/srpm-%s /tmp/srpm.tar" % pkgname)
     coprscm = "https://copr-dist-git.fedorainfracloud.org/git/%s/%s/%s.git /tmp/srpm-%s" \
@@ -293,10 +293,18 @@ def buildNewSRPM(pkgname, newvers, newdate, newhash, pkgver):
     if (newvers[0]):
       os.system("sed -i '/^Version:/s/.*/Version:        %s/' /tmp/srpm-%s/*.spec" % (newvers[0], pkgname))
 
-    for i in range(0, len(newhash)):
-      os.system("sed -i '/^\%%global pkgvers/s/.*/\%%global pkgvers %i/' /tmp/srpm-%s/*.spec" % (pkgver, pkgname))
+    os.system("sed -i '/^\%%global pkgvers/s/.*/\%%global pkgvers %i/' /tmp/srpm-%s/*.spec" % (pkgver, pkgname))
+
+    for i in range(0, len(newdate)):
       os.system("sed -i '/^\%%global scdate%i/s/.*/\%%global scdate%i %s/' /tmp/srpm-%s/*.spec" % (i, i, newdate[i][0:8], pkgname))
+
+    for i in range(0, len(newhash)):
+      if not newhash[i]: continue
       os.system("sed -i '/^\%%global schash%i/s/.*/\%%global schash%i %s/' /tmp/srpm-%s/*.spec" % (i, i, newhash[i], pkgname))
+
+    for i in range(0, len(newtags)):
+      if not newtags[i]: continue
+      os.system("sed -i '/^\%%global sctags%i/s/.*/\%%global sctags%i %s/' /tmp/srpm-%s/*.spec" % (i, i, newtags[i], pkgname))
 
     if (cu_ver_maj):
       os.system("sed -i '/^\%%global vcu_maj/s/.*/\%%global vcu_maj %s/' /tmp/srpm-%s/*.spec" % (cu_ver_maj, pkgname))
@@ -352,9 +360,9 @@ for pkg in pkglist:
   state = pkg['builds']['latest']['state']
   version = pkg['builds']['latest']['source_package']['version']
 
-  # skip non scm
-  if (not ".git" in version):
-    print("    PINNED [%s] [%s] is skipped" % (pkgname,version))
+  # skip non scm/tag
+  if (len(version.split('-')[1].split('.')[0]) != 8):
+    print("    UNVERSIONED [%s] [%s] is skipped" % (pkgname,version))
     continue
 
   # skip unfinished
@@ -404,11 +412,13 @@ for pkg in pkglist:
   screpo = []
   scdate = []
   schash = []
+  sctags = []
   branch = []
 
   newvers = []
   newdate = []
   newhash = []
+  newtags = []
 
   stdout = None
   exit_code = 0
@@ -416,102 +426,123 @@ for pkg in pkglist:
   for i in range(10):
 
     try:
+      # look for tag-base versioning
+      sctags.append(re.findall('%%global sctags%i (.+)' % i, spec)[0])
       screpo.append(re.findall('%%global source%i (.+)' % i, spec)[0])
       scdate.append(re.findall('%%global scdate%i (.+)' % i, spec)[0])
-      schash.append(re.findall('%%global schash%i (.+)' % i, spec)[0])
-      branch.append(re.findall('%%global branch%i (.+)' % i, spec)[0])
-
+      # get upstream latest tag
+      cmd = 'git ls-remote --tags --sort=version:refname %s | cut -d"/" -f3 | tail --lines=1' % screpo[i]
+      proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+      try:
+        stdout, stderr = proc.communicate(timeout=30)
+        exit_code = proc.wait()
+      except:
+        proc.kill()
+        exit_code = -1
+        break
+      if (exit_code == 0):
+        newtags.append(stdout.decode('utf-8').split()[0])
     except:
-      break
+      newtags.append(None)
 
-    # get upstream latest hash
-    cmd = 'git ls-remote --ref --head %s %s' % (screpo[i], branch[i])
-    proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
     try:
-      stdout, stderr = proc.communicate(timeout=30)
-      exit_code = proc.wait()
+      # fall to hash-base versioning
+      schash.append(re.findall('%%global schash%i (.+)' % i, spec)[0])
+      screpo.append(re.findall('%%global source%i (.+)' % i, spec)[0])
+      scdate.append(re.findall('%%global scdate%i (.+)' % i, spec)[0])
+      branch.append(re.findall('%%global branch%i (.+)' % i, spec)[0])
+      base_vers = "hash"
+      # get upstream latest hash
+      cmd = 'git ls-remote --ref --head %s %s' % (screpo[i], branch[i])
+      proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+      try:
+        stdout, stderr = proc.communicate(timeout=30)
+        exit_code = proc.wait()
+      except:
+        proc.kill()
+        exit_code = -1
+        break
+      if (exit_code == 0):
+        newhash.append(stdout.decode('utf-8').split()[0])
     except:
-      proc.kill()
-      exit_code = -1
-      break
-
-    if (exit_code == 0):
-      newhash.append(stdout.decode('utf-8').split()[0])
+      newhash.append(None)
 
   if (exit_code != 0):
-    print("    ERROR [%i] fetching [%s] repository" % (exit_code, screpo[0]))
+    print("    ERROR [%i] fetching [%s] repository" % (exit_code, screpo[i]))
     continue
 
-  if not (force or rebld) and (schash[0] == newhash[0]):
-    # already updated
-    print("    SKIP [%s] @ [%s] already latest" % (scdate[0], schash[0]))
-    continue
-
-  else:
-
+  if ((newhash[0] and (schash[0] == newhash[0]))
+   or (newtags[0] and (sctags[0] == newtags[0]))):
     # increment revision
-    if (rebld) and (schash[0] == newhash[0]):
-      pkgver = pkgver + 1
+    if rebld: pkgver = pkgver + 1
+    elif force: pass
     else:
-      pkgver = 0
-
-    if not (force or rebld) and ((cudaver_maj or cudaver_min)
-      and (cudabuilds != -1) and (cuda_build >= cudabuilds)):
-      # already queued one
-      print("    SKIP [%s] [%s] reached %s CUDA build limit" % (pkgname, version, cudabuilds))
+      if newhash[0]: print("    SKIP [%s] @ [%s] hash already latest" % (schash[0], scdate[0]))
+      if newtags[0]: print("    SKIP [%s] @ [%s] tag already latest" % (sctags[0], scdate[0]))
       continue
+  else:
+    pkgver = 0
 
-    # new changes upstream
-    for i in range(0, len(screpo)):
+  if not (force or rebld) and ((cudaver_maj or cudaver_min)
+    and (cudabuilds != -1) and (cuda_build >= cudabuilds)):
+    # already queued one
+    print("    SKIP [%s] [%s] reached %s CUDA build limit" % (pkgname, version, cudabuilds))
+    continue
 
-      if not pkgrel:
-        selfvers = re.findall('Version: (.+)', unpackSPEC(spec))[0].split()[0]
-        print("    SELF versioned:[%s]" % selfvers)
+  #
+  # new changes upstream
+  #
 
-      # lookup v-r
+  if not pkgrel:
+    selfvers = re.findall('Version: (.+)', unpackSPEC(spec))[0].split()[0]
+    print("    SELF versioned:[%s]" % selfvers)
+
+  for i in range(0, len(screpo)):
+
+    # lookup v-r
+    if newhash[i]:
       logvers, tagvers, ndate = gitCheckVersion(pkgname, branch[i], screpo[i], newhash[i], (i == 0) and pkgrel)
+    if newtags[i]:
+      logvers, tagvers, ndate = gitCheckVersion(pkgname, branch[i], screpo[i], newtags[i], False)
+      tagvers = tagExtract(newtags[i])
 
-      newvers.append(None)
-      newdate.append(ndate)
+    # extract vers/date
+    newvers.append(None)
+    newdate.append(ndate)
+    if (i == 0) and pkgrel:
+      print("    NEW [%s] -> [%s] @ [%s]" % (newdate[i][0:8], scdate[i], schash[i]))
+      error = 0
+      if logvers and (verMap(logvers) > verMap(pkgrel)):
+        # use logvers (default)
+        newvers[i] = logvers
+        print("    UPDATE version:[%s] -> [%s] @ [%s] (git logs)" % (newvers[i], pkgname, pkgrel))
+      elif tagvers and (verMap(tagvers) > verMap(pkgrel)):
+        # use tagvers (fallback)
+        newvers[i] = tagvers
+        print("    UPDATE version:[%s] -> [%s] @ [%s] (git tags)" % (newvers[i], pkgname, pkgrel))
+      # pass if no changes
+      elif logvers == pkgrel: pass
+      elif tagvers == pkgrel: pass
+      # pass on inexistent
+      elif (not logvers) and (not tagvers): pass
+      else:
+        # check decreasing changes
+        if logvers and (verMap(logvers) < verMap(pkgrel)):
+          print("    ERROR: version decreasing: [%s] -> [%s] (git log)" % (logvers, pkgrel))
+          error = 1
+        if tagvers and (verMap(tagvers) < verMap(pkgrel)):
+          print("    ERROR: version decreasing: [%s] -> [%s] (git tag)" % (tagvers, pkgrel))
+          error = 2
+      # fail decreasing
+      if (error): exit(1)
 
-      if (i == 0) and pkgrel:
-
-        print("    NEW [%s] -> [%s] @ [%s]" % (newdate[i][0:8], scdate[i], schash[i]))
-
-        error = 0
-        if logvers and (verMap(logvers) > verMap(pkgrel)):
-          # use logvers (default)
-          newvers[i] = logvers
-          print("    UPDATE version:[%s] -> [%s] @ [%s] (git logs)" % (newvers[i], pkgname, pkgrel))
-
-        elif tagvers and (verMap(tagvers) > verMap(pkgrel)):
-          # use tagvers (fallback)
-          newvers[i] = tagvers
-          print("    UPDATE version:[%s] -> [%s] @ [%s] (git tags)" % (newvers[i], pkgname, pkgrel))
-
-        # pass if no changes
-        elif logvers == pkgrel: pass
-        elif tagvers == pkgrel: pass
-        # pass on inexistent
-        elif (not logvers) and (not tagvers): pass
-
-        else:
-          # fail on decreasing changes
-          if logvers and (verMap(logvers) < verMap(pkgrel)):
-            print("    ERROR: version decreasing: [%s] -> [%s] (git log)" % (logvers, pkgrel))
-            error = 1
-          if tagvers and (verMap(tagvers) < verMap(pkgrel)):
-            print("    ERROR: version decreasing: [%s] -> [%s] (git tag)" % (tagvers, pkgrel))
-            error = 2
-
-        if (error): exit(1)
-
-      print("    UPDATE scdate%i:[%s] -> [%s] @ [%s]" % (i, newdate[i][0:8], pkgname, scdate[i]))
-      print("    UPDATE schash%i:[%s] -> [%s] @ [%s]" % (i, newhash[i][0:8], pkgname, schash[i][0:8]))
+    print("    UPDATE scdate%i:[%s] -> [%s] @ [%s]" % (i, newdate[i][0:8], pkgname, scdate[i]))
+    print("    UPDATE schash%i:[%s] -> [%s] @ [%s]" % (i, newhash[i][0:8], pkgname, schash[i][0:8]))
 
     # build srpm
-    srpm = buildNewSRPM(pkgname, newvers, newdate, newhash, pkgver)
+    srpm = buildNewSRPM(pkgname, newvers, newdate, newhash, newtags, pkgver)
 
+    # add targets
     builders = []
     for chroot in pkg['builds']['latest']['chroots']:
       if chroot in chroots:
