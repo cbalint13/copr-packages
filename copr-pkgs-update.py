@@ -539,24 +539,24 @@ for pkg in pkglist:
     print("    UPDATE scdate%i:[%s] -> [%s] @ [%s]" % (i, newdate[i][0:8], pkgname, scdate[i]))
     print("    UPDATE schash%i:[%s] -> [%s] @ [%s]" % (i, newhash[i][0:8], pkgname, schash[i][0:8]))
 
-    # build srpm
-    srpm = buildNewSRPM(pkgname, newvers, newdate, newhash, newtags, pkgver)
+  # build srpm
+  srpm = buildNewSRPM(pkgname, newvers, newdate, newhash, newtags, pkgver)
 
-    # add targets
-    builders = []
-    for chroot in pkg['builds']['latest']['chroots']:
-      if chroot in chroots:
-        builders.append(chroot)
-        if (fork_into and (fork_from in chroot)):
-          if not any(fork_into in s for s in pkg['builds']['latest']['chroots']):
-            builders.append(chroot.replace(fork_from, fork_into))
-            print("    APPEND active [%s] builder" % builders[-1])
-      else:
-        print("    SKIP inactive [%s] builder" % chroot)
+  # add targets
+  builders = []
+  for chroot in pkg['builds']['latest']['chroots']:
+    if chroot in chroots:
+      builders.append(chroot)
+      if (fork_into and (fork_from in chroot)):
+        if not any(fork_into in s for s in pkg['builds']['latest']['chroots']):
+          builders.append(chroot.replace(fork_from, fork_into))
+          print("    APPEND active [%s] builder" % builders[-1])
+    else:
+      print("    SKIP inactive [%s] builder" % chroot)
 
-    # submit build
-    print("    SUBMIT [%s]" % srpm)
-    buildCOPR(srpm, builders)
+  # submit build
+  print("    SUBMIT [%s]" % srpm)
+  buildCOPR(srpm, builders)
 
-    # mark one cuda build
-    if (cudaver_maj or cudaver_min): cuda_build += 1
+  # mark one cuda build
+  if (cudaver_maj or cudaver_min): cuda_build += 1
