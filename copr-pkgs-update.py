@@ -439,7 +439,6 @@ for pkg in pkglist:
       except:
         proc.kill()
         exit_code = -1
-        break
       if (exit_code == 0):
         newtags.append(stdout.decode('utf-8').split()[0])
     except:
@@ -451,7 +450,6 @@ for pkg in pkglist:
       screpo.append(re.findall('%%global source%i (.+)' % i, spec)[0])
       scdate.append(re.findall('%%global scdate%i (.+)' % i, spec)[0])
       branch.append(re.findall('%%global branch%i (.+)' % i, spec)[0])
-      base_vers = "hash"
       # get upstream latest hash
       cmd = 'git ls-remote --ref --head %s %s' % (screpo[i], branch[i])
       proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
@@ -461,11 +459,11 @@ for pkg in pkglist:
       except:
         proc.kill()
         exit_code = -1
-        break
       if (exit_code == 0):
         newhash.append(stdout.decode('utf-8').split()[0])
     except:
       newhash.append(None)
+      if not newtags[i]: break
 
   if (exit_code != 0):
     print("    ERROR [%i] fetching [%s] repository" % (exit_code, screpo[i]))
@@ -498,6 +496,10 @@ for pkg in pkglist:
     print("    SELF versioned:[%s]" % selfvers)
 
   for i in range(0, len(screpo)):
+
+    if (not newhash[i] and not newtags[i]):
+      print("    Error getting newhash or newtag")
+      exit(-1)
 
     # lookup v-r
     if newhash[i]:
