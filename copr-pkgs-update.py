@@ -440,6 +440,7 @@ for pkg in pkglist:
         proc.kill()
         exit_code = -1
       if (exit_code == 0):
+        if len(stdout) == 0: exit_code = -2
         newtags.append(stdout.decode('utf-8').split()[0])
     except:
       newtags.append(None)
@@ -460,6 +461,7 @@ for pkg in pkglist:
         proc.kill()
         exit_code = -1
       if (exit_code == 0):
+        if len(stdout) == 0: exit_code = -3
         newhash.append(stdout.decode('utf-8').split()[0])
     except:
       newhash.append(None)
