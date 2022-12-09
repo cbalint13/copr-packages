@@ -507,14 +507,15 @@ for pkg in pkglist:
     if newhash[i]:
       logvers, tagvers, ndate = gitCheckVersion(pkgname, branch[i], screpo[i], newhash[i], (i == 0) and pkgrel)
     if newtags[i]:
-      logvers, tagvers, ndate = gitCheckVersion(pkgname, branch[i], screpo[i], newtags[i], False)
+      logvers, tagvers, ndate = gitCheckVersion(pkgname, sctags[i], screpo[i], newtags[i], False)
       tagvers = tagExtract(newtags[i])
 
     # extract vers/date
     newvers.append(None)
     newdate.append(ndate)
     if (i == 0) and pkgrel:
-      print("    NEW [%s] -> [%s] @ [%s]" % (newdate[i][0:8], scdate[i], schash[i]))
+      if newhash[i]: print("    NEW [%s] -> [%s] @ [%s](hash)" % (newdate[i][0:8], scdate[i], schash[i]))
+      if newtags[i]: print("    NEW [%s] -> [%s] @ [%s](tags)" % (newdate[i][0:8], scdate[i], sctags[i]))
       error = 0
       if logvers and (verMap(logvers) > verMap(pkgrel)):
         # use logvers (default)
@@ -541,7 +542,8 @@ for pkg in pkglist:
       if (error): exit(1)
 
     print("    UPDATE scdate%i:[%s] -> [%s] @ [%s]" % (i, newdate[i][0:8], pkgname, scdate[i]))
-    print("    UPDATE schash%i:[%s] -> [%s] @ [%s]" % (i, newhash[i][0:8], pkgname, schash[i][0:8]))
+    if newhash[i]: print("    UPDATE schash%i:[%s] -> [%s] @ [%s]" % (i, newhash[i][0:8], pkgname, schash[i][0:8]))
+    if newtags[i]: print("    UPDATE sctags%i:[%s] -> [%s] @ [%s]" % (i, newtags[i], pkgname, sctags[i]))
 
   # build srpm
   srpm = buildNewSRPM(pkgname, newvers, newdate, newhash, newtags, pkgver)
