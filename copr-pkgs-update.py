@@ -431,7 +431,7 @@ for pkg in pkglist:
       screpo.append(re.findall('%%global source%i (.+)' % i, spec)[0])
       scdate.append(re.findall('%%global scdate%i (.+)' % i, spec)[0])
       # get upstream latest tag
-      cmd = 'git ls-remote --tags --sort=version:refname %s | cut -d"/" -f3 | tail --lines=1' % screpo[i]
+      cmd = 'git ls-remote --tags --sort=version:refname %s | cut -d"/" -f3 | cut -d"^" -f1 | tail --lines=1' % screpo[i]
       proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
       try:
         stdout, stderr = proc.communicate(timeout=30)
