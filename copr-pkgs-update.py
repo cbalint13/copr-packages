@@ -306,10 +306,10 @@ def buildNewSRPM(pkgname, newvers, newdate, newhash, newtags, pkgver):
       if not newtags[i]: continue
       os.system("sed -i '/^\%%global sctags%i/s/.*/\%%global sctags%i %s/' /tmp/srpm-%s/*.spec" % (i, i, newtags[i], pkgname))
 
-    if (cu_ver_maj):
+    if (cu_ver_maj != None):
       os.system("sed -i '/^\%%global vcu_maj/s/.*/\%%global vcu_maj %s/' /tmp/srpm-%s/*.spec" % (cu_ver_maj, pkgname))
 
-    if (cu_ver_min):
+    if (cu_ver_min != None):
       os.system("sed -i '/^\%%global vcu_min/s/.*/\%%global vcu_min %s/' /tmp/srpm-%s/*.spec" % (cu_ver_min, pkgname))
 
     # look for any tarball payload
