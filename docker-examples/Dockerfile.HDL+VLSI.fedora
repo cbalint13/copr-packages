@@ -1,0 +1,23 @@
+##
+## Example for https://copr.fedorainfracloud.org/coprs/rezso/VLSI
+##
+
+FROM fedora:latest
+
+# copr repositories
+RUN dnf -y install dnf-plugins-core
+RUN dnf -y copr enable rezso/VLSI
+RUN dnf -y copr enable rezso/HDL
+
+# fetch updates
+RUN dnf -y update
+
+##
+## Install your package here
+##
+
+# install sample
+RUN dnf -y install openlane openlane-designs
+
+# test sample
+RUN openlane-flow -design spm

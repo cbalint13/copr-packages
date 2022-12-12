@@ -1,0 +1,27 @@
+##
+## Example for https://copr.fedorainfracloud.org/coprs/rezso/VLSI
+##
+
+FROM quay.io/centos/centos:stream8
+
+# centos extra repositories
+RUN dnf -y config-manager --set-enabled powertools
+RUN dnf -y install epel-release epel-next-release
+
+# copr repositories
+RUN dnf -y install dnf-plugins-core
+RUN dnf -y copr enable rezso/VLSI
+RUN dnf -y copr enable rezso/HDL
+
+# fetch updates
+RUN dnf -y update
+
+##
+## Install your package here
+##
+
+# install sample
+RUN dnf -y install openlane openlane-designs
+
+# test sample
+RUN openlane-flow -design spm

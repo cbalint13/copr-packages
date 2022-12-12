@@ -8,6 +8,9 @@ FROM fedora:latest
 RUN dnf -y install dnf-plugins-core
 RUN dnf -y copr enable rezso/ML
 
+# fetch updates
+RUN dnf -y update
+
 # cuda repository
 RUN dnf -y config-manager --add-repo=https://developer.download.nvidia.com/compute/cuda/repos/rhel8/x86_64/cuda-rhel8.repo
 
