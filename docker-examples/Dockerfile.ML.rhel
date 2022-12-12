@@ -1,0 +1,28 @@
+##
+## Example for https://copr.fedorainfracloud.org/coprs/rezso/ML
+##
+
+FROM quay.io/centos/centos:stream8
+
+# centos extra repositories
+RUN dnf -y config-manager --set-enabled powertools
+RUN dnf -y install epel-release epel-next-release
+
+# copr repositories
+RUN dnf -y install dnf-plugins-core
+RUN dnf -y copr enable rezso/ML
+
+# cuda repository
+RUN dnf -y config-manager --add-repo=https://developer.download.nvidia.com/compute/cuda/repos/rhel8/x86_64/cuda-rhel8.repo
+# cuda runtime api
+RUN dnf -y install nvidia-driver
+
+##
+## Install your package here
+##
+
+# install sample
+RUN dnf -y install tensorflow
+
+# test sample
+RUN python3 -c "import tensorflow"

@@ -1,0 +1,28 @@
+##
+## Example for https://copr.fedorainfracloud.org/coprs/rezso/ML
+##
+
+FROM fedora:latest
+
+# copr repositories
+RUN dnf -y install dnf-plugins-core
+RUN dnf -y copr enable rezso/ML
+
+# cuda repository
+RUN dnf -y config-manager --add-repo=https://developer.download.nvidia.com/compute/cuda/repos/rhel8/x86_64/cuda-rhel8.repo
+
+# cuda runtime api
+RUN dnf -y module disable nvidia-driver
+RUN dnf -y install fedora-workstation-repositories
+RUN dnf -y config-manager --enable rpmfusion-nonfree-nvidia-driver
+RUN dnf -y install akmod-nvidia
+
+##
+## Install your package here
+##
+
+# install sample
+RUN dnf -y install tensorflow
+
+# test sample
+RUN python3 -c "import tensorflow"
