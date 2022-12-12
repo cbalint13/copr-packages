@@ -541,9 +541,12 @@ for pkg in pkglist:
       # fail decreasing
       if (error): exit(1)
 
-    print("    UPDATE scdate%i:[%s] -> [%s] @ [%s]" % (i, newdate[i][0:8], pkgname, scdate[i]))
-    if newhash[i]: print("    UPDATE schash%i:[%s] -> [%s] @ [%s]" % (i, newhash[i][0:8], pkgname, schash[i][0:8]))
-    if newtags[i]: print("    UPDATE sctags%i:[%s] -> [%s] @ [%s]" % (i, newtags[i], pkgname, sctags[i]))
+    if newhash[i] and newhash[i] != schash[i]:
+      print("    UPDATE scdate%i:[%s] -> [%s] @ [%s]" % (i, newdate[i][0:8], pkgname, scdate[i]))
+      print("    UPDATE schash%i:[%s] -> [%s] @ [%s]" % (i, newhash[i][0:8], pkgname, schash[i][0:8]))
+    if newtags[i] and newtags[i] != sctags[i]:
+      print("    UPDATE scdate%i:[%s] -> [%s] @ [%s]" % (i, newdate[i][0:8], pkgname, scdate[i]))
+      print("    UPDATE sctags%i:[%s] -> [%s] @ [%s]" % (i, newtags[i], pkgname, sctags[i]))
 
   # build srpm
   srpm = buildNewSRPM(pkgname, newvers, newdate, newhash, newtags, pkgver)
