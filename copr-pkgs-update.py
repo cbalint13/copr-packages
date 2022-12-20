@@ -436,7 +436,7 @@ for pkg in pkglist:
       # tag filter mode
       filt = '| grep "%s" | sed "s|^{}||g"' % scfilt[i]
       # get upstream latest tag
-      cmd = 'git ls-remote --tags --sort=version:refname %s %s | cut -d"/" -f3 | cut -d"^" -f1 | tail --lines=1' % (screpo[i], filt)
+      cmd = 'git ls-remote --tags --sort=version:refname %s %s | cut -d"/" -f3- | cut -d"^" -f1 | tail --lines=1' % (screpo[i], filt)
       proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
       try:
         stdout, stderr = proc.communicate(timeout=30)
