@@ -414,6 +414,7 @@ for pkg in pkglist:
   schash = []
   sctags = []
   branch = []
+  scfilt = []
 
   newvers = []
   newdate = []
@@ -430,8 +431,12 @@ for pkg in pkglist:
       sctags.append(re.findall('%%global sctags%i (.+)' % i, spec)[0])
       screpo.append(re.findall('%%global source%i (.+)' % i, spec)[0])
       scdate.append(re.findall('%%global scdate%i (.+)' % i, spec)[0])
+      try: scfilt.append(re.findall('%%global scfilt%i (.+)' % i, spec)[0])
+      except: scfilt.append('')
+      # tag filter mode
+      filt = '| grep "%s" | sed "s|^{}||g"' % scfilt[i]
       # get upstream latest tag
-      cmd = 'git ls-remote --tags --sort=version:refname %s | cut -d"/" -f3 | cut -d"^" -f1 | tail --lines=1' % screpo[i]
+      cmd = 'git ls-remote --tags --sort=version:refname %s %s | cut -d"/" -f3 | cut -d"^" -f1 | tail --lines=1' % (screpo[i], filt)
       proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
       try:
         stdout, stderr = proc.communicate(timeout=30)
@@ -451,8 +456,12 @@ for pkg in pkglist:
       screpo.append(re.findall('%%global source%i (.+)' % i, spec)[0])
       scdate.append(re.findall('%%global scdate%i (.+)' % i, spec)[0])
       branch.append(re.findall('%%global branch%i (.+)' % i, spec)[0])
+      try: scfilt.append(re.findall('%%global scfilt%i (.+)' % i, spec)[0])
+      except: scfilt.append('')
+      # tag filter mode
+      filt = '| grep "%s" | sed "s|^{}||g"' % scfilt[i]
       # get upstream latest hash
-      cmd = 'git ls-remote --ref --head %s %s' % (screpo[i], branch[i])
+      cmd = 'git ls-remote --ref --head %s %s %s' % (screpo[i], branch[i], filt)
       proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
       try:
         stdout, stderr = proc.communicate(timeout=30)
