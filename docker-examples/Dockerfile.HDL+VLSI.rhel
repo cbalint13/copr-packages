@@ -20,8 +20,18 @@ RUN dnf -y update
 ## Install your package here
 ##
 
-# install sample
-RUN dnf -y install openlane openlane-designs
+# install package
+RUN dnf -y install openlane
 
-# test sample
-RUN openlane-flow -design spm
+##
+## Test
+##
+
+# install example
+RUN dnf -y install openlane-designs
+
+# create sample design
+RUN cp -r /usr/share/openlane/designs/spm my-spm
+
+# run on sample design
+RUN openlane-flow -design my-spm
