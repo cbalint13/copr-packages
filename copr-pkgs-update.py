@@ -290,6 +290,10 @@ def buildNewSRPM(pkgname, newvers, newdate, newhash, newtags, pkgver):
             % (client.config['username'], coprproject, pkgname, pkgname)
     os.system("git clone -q --depth 1 -b master %s" % coprscm)
 
+    # remove SPECPARTS
+    os.system("sed -i '/rm -rf \%%{_builddir}/d' /tmp/srpm-%s/*.spec;" % pkgname)
+    os.system("sed -i '/^\%%setup -T/a find \%%{_builddir} -name SPECPARTS -exec rm -rf {} +' /tmp/srpm-%s/*.spec" % pkgname)
+
     if (newvers[0]):
       os.system("sed -i '/^Version:/s/.*/Version:        %s/' /tmp/srpm-%s/*.spec" % (newvers[0], pkgname))
 
