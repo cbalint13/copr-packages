@@ -292,6 +292,7 @@ def buildNewSRPM(pkgname, newvers, newdate, newhash, newtags, pkgver):
 
     # remove SPECPARTS
     os.system("sed -i '/rm -rf \%%{_builddir}/d' /tmp/srpm-%s/*.spec;" % pkgname)
+    os.system("sed -i '/SPECPARTS/d' /tmp/srpm-%s/*.spec;" % pkgname)
     os.system("sed -i '/^\%%setup -T/a find \%%{_builddir} -name SPECPARTS -exec rm -rf {} +' /tmp/srpm-%s/*.spec" % pkgname)
 
     if (newvers[0]):
