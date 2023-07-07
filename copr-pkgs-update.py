@@ -291,31 +291,31 @@ def buildNewSRPM(pkgname, newvers, newdate, newhash, newtags, pkgver):
     os.system("git clone -q --depth 1 -b master %s" % coprscm)
 
     # remove SPECPARTS
-    os.system("sed -i '/rm -rf \%%{_builddir}/d' /tmp/srpm-%s/*.spec;" % pkgname)
+    os.system("sed -i '/rm -rf %%{_builddir}/d' /tmp/srpm-%s/*.spec;" % pkgname)
     os.system("sed -i '/SPECPARTS/d' /tmp/srpm-%s/*.spec;" % pkgname)
-    os.system("sed -i '/^\%%setup -T/a find \%%{_builddir} -name SPECPARTS -exec rm -rf {} +' /tmp/srpm-%s/*.spec" % pkgname)
+    os.system("sed -i '/^%%setup -T/a find %%{_builddir} -name SPECPARTS -exec rm -rf {} +' /tmp/srpm-%s/*.spec" % pkgname)
 
     if (newvers[0]):
       os.system("sed -i '/^Version:/s/.*/Version:        %s/' /tmp/srpm-%s/*.spec" % (newvers[0], pkgname))
 
-    os.system("sed -i '/^\%%global pkgvers/s/.*/\%%global pkgvers %i/' /tmp/srpm-%s/*.spec" % (pkgver, pkgname))
+    os.system("sed -i '/^%%global pkgvers/s/.*/%%global pkgvers %i/' /tmp/srpm-%s/*.spec" % (pkgver, pkgname))
 
     for i in range(0, len(newdate)):
-      os.system("sed -i '/^\%%global scdate%i/s/.*/\%%global scdate%i %s/' /tmp/srpm-%s/*.spec" % (i, i, newdate[i][0:8], pkgname))
+      os.system("sed -i '/^%%global scdate%i/s/.*/%%global scdate%i %s/' /tmp/srpm-%s/*.spec" % (i, i, newdate[i][0:8], pkgname))
 
     for i in range(0, len(newhash)):
       if not newhash[i]: continue
-      os.system("sed -i '/^\%%global schash%i/s/.*/\%%global schash%i %s/' /tmp/srpm-%s/*.spec" % (i, i, newhash[i], pkgname))
+      os.system("sed -i '/^%%global schash%i/s/.*/%%global schash%i %s/' /tmp/srpm-%s/*.spec" % (i, i, newhash[i], pkgname))
 
     for i in range(0, len(newtags)):
       if not newtags[i]: continue
-      os.system("sed -i '/^\%%global sctags%i/s/.*/\%%global sctags%i %s/' /tmp/srpm-%s/*.spec" % (i, i, newtags[i].replace('/','\/'), pkgname))
+      os.system("sed -i '/^%%global sctags%i/s/.*/%%global sctags%i %s/' /tmp/srpm-%s/*.spec" % (i, i, newtags[i], pkgname))
 
     if (cu_ver_maj != None):
-      os.system("sed -i '/^\%%global vcu_maj/s/.*/\%%global vcu_maj %s/' /tmp/srpm-%s/*.spec" % (cu_ver_maj, pkgname))
+      os.system("sed -i '/^%%global vcu_maj/s/.*/%%global vcu_maj %s/' /tmp/srpm-%s/*.spec" % (cu_ver_maj, pkgname))
 
     if (cu_ver_min != None):
-      os.system("sed -i '/^\%%global vcu_min/s/.*/\%%global vcu_min %s/' /tmp/srpm-%s/*.spec" % (cu_ver_min, pkgname))
+      os.system("sed -i '/^%%global vcu_min/s/.*/%%global vcu_min %s/' /tmp/srpm-%s/*.spec" % (cu_ver_min, pkgname))
 
     # look for any tarball payload
     cmd = "cat /tmp/srpm-%s/sources" % pkgname
