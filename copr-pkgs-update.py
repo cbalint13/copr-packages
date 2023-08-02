@@ -309,7 +309,7 @@ def buildNewSRPM(pkgname, newvers, newdate, newhash, newtags, pkgver):
 
     for i in range(0, len(newtags)):
       if not newtags[i]: continue
-      os.system("sed -i '/^%%global sctags%i/s/.*/%%global sctags%i %s/' /tmp/srpm-%s/*.spec" % (i, i, newtags[i].replace('/','\/'), pkgname))
+      os.system("sed -i '/^%%global sctags%i/s/.*/%%global sctags%i %s/' /tmp/srpm-%s/*.spec" % (i, i, newtags[i].replace('/',r'\/'), pkgname))
 
     if (cu_ver_maj != None):
       os.system("sed -i '/^%%global vcu_maj/s/.*/%%global vcu_maj %s/' /tmp/srpm-%s/*.spec" % (cu_ver_maj, pkgname))
