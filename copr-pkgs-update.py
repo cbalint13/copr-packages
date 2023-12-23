@@ -257,6 +257,7 @@ def gitCheckVersion(pkgname, branch, screpo, schash, dover = False):
       if ("gnuradio" in pkgname and int(vers.split('.')[1]) < 11): continue
       if ("torch" in pkgname and "." not in vers): continue
       if ("libxsmm" in pkgname and re.findall('[a-z;A-Z]', vers)): continue
+      if ("fbgemm" in pkgname and re.findall('[a-z;A-Z]', vers)): continue
       if ("mxnet" in pkgname and int(vers.split('.')[0]) < 2): continue
       if ("optuna" in pkgname and int(re.sub('[a-z,A-Z]','',vers.split('.')[0],0)) < 3): continue
       if ("xbyak" in pkgname and len(vers) > 5): vers = vers[:5]
@@ -530,6 +531,7 @@ for pkg in pkglist:
       if newhash[i]: print("    NEW [%s] -> [%s] @ [%s](hash)" % (newdate[i][0:8], scdate[i], schash[i]))
       if newtags[i]: print("    NEW [%s] -> [%s] @ [%s](tags)" % (newdate[i][0:8], scdate[i], sctags[i]))
       error = 0
+      print("tagvers [%s]" % tagvers)
       if logvers and (verMap(logvers) > verMap(pkgrel)):
         # use logvers (default)
         newvers[i] = logvers
