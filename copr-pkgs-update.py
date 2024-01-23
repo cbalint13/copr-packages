@@ -482,7 +482,7 @@ for pkg in pkglist:
       if not newtags[i]: break
 
   if (exit_code != 0):
-    print("    ERROR [%i] fetching [%s] repository" % (exit_code, screpo[i]))
+    print("    ERROR [%i] fetching [%s] repository" % (exit_code, screpo[-1]))
     continue
 
   if ((newhash[0] and (schash[0] == newhash[0]))
