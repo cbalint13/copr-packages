@@ -23,4 +23,4 @@ RUN python3 -u copr-pkgs-update.py SDR --min-days 7 --fork fedora-rawhide fedora
 
 RUN python3 -u copr-pkgs-update.py MOBILE --min-days 7 --fork fedora-rawhide fedora-43
 
-RUN python3 -u copr-pkgs-update.py ML --min-days 7 --cuda-ver-maj 13 --cuda-ver-min 0 --fork fedora-rawhide fedora-43
+RUN python3 -u copr-pkgs-update.py ML --min-days 7 --cuda-ver-maj 13 --cuda-ver-min 1 --fork fedora-rawhide fedora-43
