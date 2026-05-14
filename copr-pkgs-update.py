@@ -251,6 +251,7 @@ def gitCheckVersion(pkgname, branch, screpo, schash, dover = False):
       # blacklists
       if ("gklib" in pkgname): continue
       if ("nextpnr" in pkgname): continue
+      if ("kineto" in pkgname and "v" not in vers): continue
       if ("bladerf" in pkgname and "_" in vers): continue
       if ("limesuite" in pkgname and "-" in vers): continue
       if ("onednn" in pkgname and "graph" in vers): continue
