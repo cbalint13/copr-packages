@@ -124,6 +124,9 @@ def tagExtract(v, d = '-'):
 
   # delimit
   v = re.sub('[+,_]', '.', v, count=0)
+
+  if not re.findall('[0-9]', v): return None
+
   # iterate
   while (True):
     if not v: return None
