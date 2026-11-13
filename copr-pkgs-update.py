@@ -123,7 +123,7 @@ def tagExtract(v, d = '-'):
     return t
 
   # delimit
-  v = re.sub('[+,_]', '.', v, 0)
+  v = re.sub('[+,_]', '.', v, count=0)
   # iterate
   while (True):
     if not v: return None
